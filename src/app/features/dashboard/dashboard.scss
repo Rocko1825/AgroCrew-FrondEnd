@@ -1,0 +1,30 @@
+@use 'variables' as v;
+
+.filtros {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  align-items: end;
+  gap: 16px;
+
+  .acciones { flex-wrap: nowrap; }
+  .error-filtro, .nota { grid-column: 1 / -1; }
+  @include v.movil { grid-template-columns: 1fr; }
+}
+
+.nota { font-size: 0.85rem; color: var(--color-texto-suave); margin: 0 0 10px; }
+.kpi .dato-etiqueta { display: inline-flex; align-items: center; gap: 4px; }
+
+.metricas {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 18px;
+  .fila { justify-content: space-between; margin-bottom: 6px; }
+}
+.meta-pista { position: relative; overflow: visible; }
+.marca-meta {
+  position: absolute; top: -4px; bottom: -4px; width: 3px; border-radius: 2px;
+  background: var(--color-texto); opacity: 0.6;
+}
+
+.exposicion .porcentaje { font-size: 2.6rem; font-weight: 700; line-height: 1.1; margin: 4px 0; color: var(--color-acento); }
+.encabezado-alertas { justify-content: space-between; margin-bottom: 12px; }
+.anio { width: auto; }
+.esqueleto { height: 90px; }

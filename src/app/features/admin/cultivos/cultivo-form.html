@@ -1,0 +1,120 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ (esEdicion() ? 'Editar cultivo' : 'Registrar cultivo') | t }}</h1>
+    </div>
+    <a class="btn btn-secundario" routerLink="/admin/cultivos"><app-icono nombre="atras" [tamano]="18" /> {{ 'Cancelar' | t }}</a>
+  </div>
+
+  @if (cargando()) { <div class="tarjeta"><app-cargando [lineas]="4" /></div> }
+
+  <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="grid-2">
+      <section class="tarjeta formulario" aria-labelledby="titulo-cultivo">
+        <div class="titulo-con-icono">
+          <h2 id="titulo-cultivo" class="h3">{{ 'Datos del cultivo' | t }}</h2>
+        </div>
+        <div class="campo">
+          <label for="cul-nombre">{{ 'Nombre' | t }}</label>
+          <input id="cul-nombre" formControlName="nombre">
+          @if (errorDe(formulario.controls.nombre); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="cul-cientifico">{{ 'Nombre científico' | t }} <small>({{ 'opcional' | t }})</small></label>
+          <input id="cul-cientifico" formControlName="nombreCientifico">
+        </div>
+        <div class="grid-2">
+          <div class="campo">
+            <label for="cul-tipo">{{ 'Tipo' | t }}</label>
+            <select id="cul-tipo" formControlName="tipo">
+              <option value="TRANSITORIO">{{ 'Transitorio' | t }}</option>
+              <option value="PERMANENTE">{{ 'Permanente' | t }}</option>
+              <option value="PASTO">{{ 'Pasto' | t }}</option>
+              <option value="FORESTAL">{{ 'Forestal' | t }}</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="cul-ciclo">{{ 'Ciclo (días)' | t }}</label>
+            <input id="cul-ciclo" type="number" min="1" formControlName="cicloDias" aria-describedby="cul-ciclo-ayuda">
+            <span id="cul-ciclo-ayuda" class="ayuda">{{ 'Déjalo vacío en cultivos permanentes.' | t }}</span>
+            @if (errorDe(formulario.controls.cicloDias); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+        </div>
+        <div class="campo">
+          <label for="cul-descripcion">{{ 'Descripción' | t }} <small>({{ 'opcional' | t }})</small></label>
+          <textarea id="cul-descripcion" formControlName="descripcion" maxlength="500"></textarea>
+        </div>
+        <fieldset>
+          <legend>{{ 'Suelos aptos (grupos de Capacidad de Uso Mayor)' | t }}</legend>
+          <div class="grupos">
+            @for (g of gruposDisponibles(); track g.codigo) {
+              <label class="grupo">
+                <input type="checkbox" [checked]="grupoMarcado(g.codigo)" (change)="alternarGrupo(g.codigo, $any($event.target).checked)">
+                <span><strong>{{ g.codigo }} · {{ g.nombre | tApi }}</strong><br><small class="texto-suave">{{ g.descripcionSimple | tApi }}</small></span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="tarjeta formulario" formGroupName="requerimiento" aria-labelledby="titulo-requerimientos">
+        <div class="titulo-con-icono">
+          <h2 id="titulo-requerimientos" class="h3">{{ 'Requerimientos agronómicos' | t }}</h2>
+        </div>
+        <div class="rangos">
+          <div class="campo">
+            <label for="req-alt-min">{{ 'Altitud mínima (msnm)' | t }}</label>
+            <input id="req-alt-min" type="number" formControlName="altitudMin">
+            @if (errorDe(requerimiento.controls.altitudMin); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="req-alt-max">{{ 'Altitud máxima (msnm)' | t }}</label>
+            <input id="req-alt-max" type="number" formControlName="altitudMax">
+            @if (errorDe(requerimiento.controls.altitudMax); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          @if (errorRango('altitudMin'); as e) { <span class="campo-error error-rango">{{ e }}</span> }
+
+          <div class="campo">
+            <label for="req-temp-min">{{ 'Temperatura mínima (°C)' | t }}</label>
+            <input id="req-temp-min" type="number" step="0.1" formControlName="temperaturaMin">
+            @if (errorDe(requerimiento.controls.temperaturaMin); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="req-temp-max">{{ 'Temperatura máxima (°C)' | t }}</label>
+            <input id="req-temp-max" type="number" step="0.1" formControlName="temperaturaMax">
+            @if (errorDe(requerimiento.controls.temperaturaMax); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          @if (errorRango('temperaturaMin'); as e) { <span class="campo-error error-rango">{{ e }}</span> }
+
+          <div class="campo">
+            <label for="req-lluvia-min">{{ 'Lluvia anual mínima (mm)' | t }}</label>
+            <input id="req-lluvia-min" type="number" formControlName="precipitacionMinMm">
+            @if (errorDe(requerimiento.controls.precipitacionMinMm); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="req-lluvia-max">{{ 'Lluvia anual máxima (mm)' | t }}</label>
+            <input id="req-lluvia-max" type="number" formControlName="precipitacionMaxMm">
+            @if (errorDe(requerimiento.controls.precipitacionMaxMm); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          @if (errorRango('precipitacionMinMm'); as e) { <span class="campo-error error-rango">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="req-tolerancia">{{ 'Tolerancia a inundación' | t }}</label>
+          <select id="req-tolerancia" formControlName="toleranciaInundacion">
+            <option value="BAJA">{{ 'Baja' | t }}</option>
+            <option value="MEDIA">{{ 'Media' | t }}</option>
+            <option value="ALTA">{{ 'Alta' | t }}</option>
+          </select>
+        </div>
+        <label class="opciones"><input type="checkbox" formControlName="requiereRiego"> {{ 'Requiere riego (no prospera solo con lluvia)' | t }}</label>
+      </section>
+    </div>
+
+    @if (error()) { <app-aviso tipo="error" class="seccion-corta">{{ error() }}</app-aviso> }
+    <div class="fila fila-fin seccion-corta">
+      <button appBoton type="submit" [cargando]="guardando()" [textoCargando]="'Guardando…' | t">
+        <app-icono nombre="check" [tamano]="18" /> {{ (esEdicion() ? 'Guardar cambios' : 'Registrar cultivo') | t }}
+      </button>
+    </div>
+  </form>
+</div>

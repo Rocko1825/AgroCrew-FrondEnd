@@ -1,0 +1,70 @@
+@use 'variables' as v;
+
+/* Escena del acceso: fondo topográfico a todo el ancho; el panel se desplaza unos píxeles con el cursor. */
+.escena { position: relative; isolation: isolate; min-height: calc(100vh - 64px); }
+app-portada-acceso {
+  transform: translate(calc(var(--px, 0) * 6px), calc(var(--py, 0) * 6px));
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.panel { position: relative; }
+
+/* Fondo completo: la foto se abre detrás de la interfaz, que se mantiene en su sitio y usable. */
+.control-fondo {
+  position: absolute; z-index: 2; left: 50%; bottom: 16px; translate: -50% 0;
+  border: 1px solid var(--color-borde); border-radius: 999px; padding: 6px 14px;
+  font: inherit; font-size: 0.8rem; cursor: pointer; color: var(--color-texto-suave);
+  background: color-mix(in srgb, var(--color-superficie) 80%, transparent); backdrop-filter: blur(6px);
+  animation: aparecer 0.6s 1s both;
+}
+.control-fondo:hover, .control-fondo:focus-visible { color: var(--color-texto); }
+/* Sobre la foto completa, la pista se vuelve oscura para leerse bien. */
+.fondo-completo .control-fondo { background: rgba(15, 25, 18, 0.55); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.25); }
+@media (prefers-reduced-motion: reduce) { app-portada-acceso { transform: none; } }
+
+.acceso { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: stretch; }
+.acceso > .panel { align-self: start; }
+@include v.movil { .acceso { grid-template-columns: 1fr; gap: 20px; } }
+
+
+
+
+.panel { padding: 28px; border-radius: 16px; }
+.aviso-sesion { margin-bottom: 16px; }
+
+.pestanas {
+  position: relative; display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 20px;
+  background: var(--color-superficie-2); border: 1px solid var(--color-borde); border-radius: 10px; padding: 4px;
+
+  button {
+    position: relative; z-index: 1; padding: 10px; border: none; background: none; cursor: pointer;
+    font: inherit; font-weight: 600; color: var(--color-texto-suave); transition: color 0.2s ease;
+  }
+  button[aria-selected='true'] { color: #FFFFFF; }
+  .indicador {
+    position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+    border-radius: 7px; background: var(--color-marca); transition: transform 0.3s var(--curva);
+  }
+  .indicador.derecha { transform: translateX(100%); }
+}
+
+.con-boton { position: relative; }
+.con-boton input { padding-right: 84px; }
+.con-boton .ver { position: absolute; right: 12px; background: var(--color-superficie); padding: 2px 4px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; }
+.enlaces { justify-content: space-between; }
+
+.tipo { border: none; padding: 0; }
+.tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@include v.movil { .tipos { grid-template-columns: 1fr; } }
+.opcion-tipo {
+  position: relative; cursor: pointer;
+  input { position: absolute; opacity: 0; }
+  span {
+    display: grid; gap: 2px; height: 100%; padding: 12px 14px; border-radius: 10px;
+    border: 2px solid var(--color-borde); transition: border-color 0.2s ease, background-color 0.2s ease;
+    app-icono { color: var(--color-acento); margin-bottom: 4px; }
+    small { color: var(--color-texto-suave); font-weight: 400; }
+  }
+  input:checked + span { border-color: var(--color-acento); background: var(--color-marca-claro); }
+  input:focus-visible + span { box-shadow: var(--anillo-foco); }
+  &:hover span { border-color: var(--color-acento-suave); }
+}

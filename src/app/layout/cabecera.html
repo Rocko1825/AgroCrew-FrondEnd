@@ -1,0 +1,74 @@
+<header class="cabecera" [class.con-sombra]="conSombra()">
+  <div class="contenedor barra">
+    <a class="marca" [routerLink]="auth.autenticado() ? auth.rutaInicio() : '/acceso'">
+      <img src="logo.svg" alt="" width="36" height="36">
+      <span>AgroCrew</span>
+    </a>
+
+    <div class="derecha">
+      @if (auth.autenticado()) {
+        <nav id="menu-principal" class="menu" [class.abierto]="menuAbierto()" [attr.aria-label]="'Menú principal' | t">
+          <ul class="enlaces">
+            @for (e of enlaces(); track e.ruta) {
+              <li>
+                <a [routerLink]="e.ruta" routerLinkActive="activo" ariaCurrentWhenActive="page">
+                  <app-icono [nombre]="e.icono" [tamano]="18" />
+                  {{ e.texto | t }}
+                  @if (e.alertas && alertas.noLeidas() > 0) {
+                    <span class="contador">
+                      {{ alertas.noLeidas() }}<span class="sr-only"> {{ 'sin leer' | t }}</span>
+                    </span>
+                  }
+                </a>
+              </li>
+            }
+          </ul>
+
+          <div class="cuenta">
+            <button class="boton-cuenta" type="button" aria-controls="menu-cuenta" [attr.aria-label]="'Mi cuenta' | t"
+                    [attr.aria-expanded]="cuentaAbierta()" (click)="cuentaAbierta.set(!cuentaAbierta())">
+              <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+              <span class="texto-cuenta">{{ 'Mi cuenta' | t }}</span>
+              <app-icono class="flecha" [class.girada]="cuentaAbierta()" nombre="abajo" [tamano]="16" />
+            </button>
+            <div id="menu-cuenta" class="panel-cuenta" [class.abierto]="cuentaAbierta()">
+              <p class="usuario">
+                <strong>{{ auth.usuario()?.nombres }} {{ auth.usuario()?.apellidos }}</strong><br>
+                <small>{{ auth.rol() | etiqueta }}</small>
+              </p>
+              <a routerLink="/perfil"><app-icono nombre="usuario" [tamano]="18" /> {{ 'Mi perfil' | t }}</a>
+              <button class="btn-texto" type="button" (click)="cerrarSesion()">
+                <app-icono nombre="salir" [tamano]="18" /> {{ 'Cerrar sesión' | t }}
+              </button>
+            </div>
+          </div>
+        </nav>
+      }
+
+      <div class="preferencias">
+        <button class="boton-icono" type="button" (click)="tema.alternar()"
+                [attr.aria-label]="(tema.tema() === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro') | t"
+                [attr.title]="(tema.tema() === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro') | t">
+          <app-icono class="icono-tema" [nombre]="tema.tema() === 'oscuro' ? 'sol' : 'luna'" [tamano]="18" />
+        </button>
+        <button class="boton-icono boton-idioma" type="button" (click)="cambiarIdioma()"
+                [attr.aria-label]="idioma === 'es' ? 'Change language to English' : 'Cambiar idioma a español'"
+                [attr.title]="idioma === 'es' ? 'English' : 'Español'">
+          <app-icono nombre="globo" [tamano]="18" />
+          <span>{{ idioma === 'es' ? 'EN' : 'ES' }}</span>
+        </button>
+      </div>
+
+      @if (auth.autenticado()) {
+        <button class="boton-menu" type="button" aria-controls="menu-principal"
+                [attr.aria-expanded]="menuAbierto()" (click)="menuAbierto.set(!menuAbierto())">
+          <app-icono [nombre]="menuAbierto() ? 'cerrar' : 'menu'" [tamano]="22" />
+          <span class="sr-only">{{ (menuAbierto() ? 'Cerrar menú' : 'Abrir menú') | t }}</span>
+          @if (alertas.noLeidas() > 0 && !menuAbierto()) {
+            <span class="contador" aria-hidden="true">{{ alertas.noLeidas() }}</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+</header>

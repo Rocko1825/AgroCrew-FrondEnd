@@ -1,0 +1,89 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ 'Alertas' | t }}</h1>
+    </div>
+  </div>
+
+  @if (servicio.noLeidas() > 0) {
+    <app-aviso tipo="advertencia" class="seccion-corta">
+      {{ (servicio.noLeidas() === 1 ? 'Tienes {n} alerta sin leer.' : 'Tienes {n} alertas sin leer.') | t: { n: servicio.noLeidas() } }}
+      {{ 'Ábrelas para ver qué te recomendamos hacer.' | t }}
+    </app-aviso>
+  }
+
+  @if (error()) {
+    <app-aviso tipo="error" class="seccion-corta">{{ error() }}</app-aviso>
+  } @else if (alertas() === null) {
+    <div class="pila-carga">
+      @for (i of [1, 2, 3]; track i) { <div class="tarjeta"><app-cargando [lineas]="2" /></div> }
+    </div>
+  } @else if (alertas()!.length === 0) {
+    <app-estado-vacio class="seccion-corta" icono="campana" [titulo]="'No tienes alertas' | t"
+                      [mensaje]="'Te avisaremos si tu predio queda cerca de una zona de inundación o se pronostican lluvias intensas.' | t">
+      <a class="btn btn-secundario" routerLink="/predios">{{ 'Ver mis predios' | t }}</a>
+    </app-estado-vacio>
+  } @else {
+    <div class="fila filtros seccion-corta">
+      <div class="campo">
+        <label for="filtro-predio">{{ 'Predio' | t }}</label>
+        <select id="filtro-predio" [ngModel]="filtroPredio()" (ngModelChange)="filtroPredio.set($event)">
+          <option [ngValue]="null">{{ 'Todos mis predios' | t }}</option>
+          @for (p of predios(); track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
+        </select>
+      </div>
+      <div class="campo">
+        <label for="filtro-estado">{{ 'Mostrar' | t }}</label>
+        <select id="filtro-estado" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)">
+          <option value="todas">{{ 'Todas' | t }}</option>
+          <option value="no-leidas">{{ 'Sin leer' | t }}</option>
+          <option value="leidas">{{ 'Leídas' | t }}</option>
+        </select>
+      </div>
+    </div>
+
+    @if (visibles().length === 0) {
+      <p class="texto-suave">{{ 'No hay alertas con estos filtros.' | t }}</p>
+    }
+    <ul class="lista">
+      @for (a of visibles(); track a.id; let i = $index) {
+        <li class="tarjeta alerta" [class.no-leida]="!a.leida" [class]="'tarjeta alerta nivel-borde-' + a.nivel"
+            [style.animation-delay.ms]="i * 40">
+          <div class="encabezado">
+            <span [class]="'icono-alerta nivel-' + a.nivel">
+              <app-icono [nombre]="a.tipo === 'LLUVIA_INTENSA' ? 'lluvia' : 'escudo'" />
+            </span>
+            <h3>{{ a.titulo | tApi }}</h3>
+            <span [class]="'chip nivel-' + a.nivel">{{ 'Riesgo' | t }} {{ a.nivel | etiqueta }}</span>
+            @if (!a.leida) { <span class="estado-punto atencion">{{ 'Nueva' | t }}</span> }
+          </div>
+          <p class="meta texto-suave">
+            {{ a.tipo | etiqueta }} · {{ a.predio }} · {{ a.fechaGeneracion | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+          <div class="fila seccion-corta">
+            <button class="btn-texto" type="button" [attr.aria-expanded]="abierta(a.id)"
+                    [attr.aria-controls]="'alerta-' + a.id" (click)="alternar(a)">
+              {{ (abierta(a.id) ? 'Ocultar detalle' : 'Ver detalle y acciones') | t }}
+            </button>
+            @if (!a.leida) {
+              <button class="btn btn-secundario btn-pequeno" type="button" (click)="marcarLeida(a)">
+                <app-icono nombre="check" [tamano]="16" /> {{ 'Marcar como leída' | t }}</button>
+            }
+          </div>
+          @if (abierta(a.id)) {
+            <div class="cuerpo desplegable" [id]="'alerta-' + a.id">
+              <p>{{ a.mensaje | tApi }}</p>
+              @if (acciones(a.accionesSugeridas | tApi).length) {
+                <p class="mb-0"><strong>{{ 'Acciones sugeridas:' | t }}</strong></p>
+                <ul class="acciones-sugeridas">
+                  @for (accion of acciones(a.accionesSugeridas | tApi); track $index) { <li>{{ accion }}</li> }
+                </ul>
+              }
+              <a [routerLink]="['/predios', a.predioId]">{{ 'Ver el predio' | t }}</a>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

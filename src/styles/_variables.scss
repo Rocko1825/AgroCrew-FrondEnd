@@ -1,0 +1,22 @@
+// Guía de estilo de AgroCrew (informe, sección 3.1): un solo color de marca, neutros y unidades rem.
+// Los colores también se exponen como variables CSS en styles.scss (:root) para usarlos en los componentes.
+
+$color-marca: #2F5D3A;
+$color-marca-oscuro: #1F2A21;
+$color-marca-claro: #E6F0E8;
+$color-borde: #DDDDDD;
+
+// Único punto de quiebre del diseño responsive.
+$quiebre: 768px;
+
+$fuente: "Plus Jakarta Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+$ancho-maximo: 1000px;
+$radio-boton: 6px;
+$radio-tarjeta: 8px;
+
+// Uso: @include movil { ... } para pantallas de 768 px o menos.
+@mixin movil {
+  @media (max-width: $quiebre) {
+    @content;
+  }
+}

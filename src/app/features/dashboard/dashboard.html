@@ -1,0 +1,172 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ 'Dashboard por zona' | t }}</h1>
+      <p class="texto-suave mb-0">{{ 'Aptitud de los suelos y riesgo hídrico para orientar a los productores de tu zona.' | t }}</p>
+    </div>
+    <button class="btn btn-secundario" type="button" (click)="exportarCsv()"><app-icono nombre="descarga" [tamano]="18" /> {{ 'Exportar CSV' | t }}</button>
+  </div>
+
+  <!-- US28: filtros -->
+  <form class="tarjeta filtros" (ngSubmit)="filtrar()" [attr.aria-label]="'Filtros del dashboard' | t">
+    <div class="campo">
+      <label for="dash-departamento">{{ 'Departamento' | t }}</label>
+      <select id="dash-departamento" name="departamento" [ngModel]="departamentoId()" (ngModelChange)="departamentoId.set($event)">
+        <option [ngValue]="null">{{ 'Todo el Perú' | t }}</option>
+        @for (d of departamentos(); track d.id) { <option [ngValue]="d.id">{{ d.nombre }}</option> }
+      </select>
+    </div>
+    <div class="campo">
+      <label for="dash-desde">{{ 'Desde' | t }}</label>
+      <input id="dash-desde" name="desde" type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)">
+    </div>
+    <div class="campo">
+      <label for="dash-hasta">{{ 'Hasta' | t }}</label>
+      <input id="dash-hasta" name="hasta" type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)">
+    </div>
+    <div class="fila acciones">
+      <button class="btn" type="submit"><app-icono nombre="busqueda" [tamano]="18" /> {{ 'Filtrar' | t }}</button>
+      <button class="btn-texto" type="button" (click)="limpiar()">{{ 'Limpiar' | t }}</button>
+    </div>
+    @if (errorFiltro()) { <app-aviso tipo="error" class="error-filtro">{{ errorFiltro() }}</app-aviso> }
+    <p class="nota">{{ 'El rango de fechas se aplica a «Cultivos más recomendados»; los demás reportes muestran todo el historial.' | t }}</p>
+  </form>
+
+  @if (error()) { <app-aviso tipo="error" class="seccion-corta">{{ error() }}</app-aviso> }
+
+  <!-- Indicadores generales -->
+  @if (indicadores(); as ind) {
+    <section class="tarjeta franja seccion-corta indicadores" [attr.aria-label]="'Indicadores generales' | t">
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Predios activos' | t }} <app-ayuda [texto]="'Predios registrados que no fueron eliminados.' | t" /></span><span class="dato-valor" [appContador]="ind.prediosActivos"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ '% evaluaciones completas' | t }} <app-ayuda [texto]="'Evaluaciones en las que respondieron todas las fuentes: MIDAGRI, ANA y Open-Meteo.' | t" /></span>
+          <span class="dato-valor" [appContador]="ind.porcentajeEvaluacionesCompletadas" [decimales]="1" sufijo=" %"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ '% preventivas' | t }} <app-ayuda [texto]="'Evaluaciones hechas sin una alerta activa: el productor consultó antes de que hubiera un problema.' | t" /></span>
+          <span class="dato-valor" [appContador]="ind.porcentajeEvaluacionesPreventivas" [decimales]="1" sufijo=" %"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Evaluaciones' | t }} <app-ayuda [texto]="'Total de evaluaciones de cultivos hechas en la plataforma.' | t" /></span><span class="dato-valor" [appContador]="ind.evaluaciones"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Productores' | t }} <app-ayuda [texto]="'Cuentas de productores agrícolas registradas.' | t" /></span><span class="dato-valor" [appContador]="ind.productores"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Asesores' | t }} <app-ayuda [texto]="'Cuentas de asesores técnicos y gobiernos locales.' | t" /></span><span class="dato-valor" [appContador]="ind.asesores"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Alertas generadas' | t }} <app-ayuda [texto]="'Alertas de riesgo hídrico y lluvia intensa enviadas a los productores.' | t" /></span><span class="dato-valor" [appContador]="ind.alertasGeneradas"></span></div></div>
+      <div class="kpi"><div class="dato"><span class="dato-etiqueta">{{ 'Puntos críticos (ANA)' | t }} <app-ayuda [texto]="'Lugares con riesgo de inundación o desborde registrados por la Autoridad Nacional del Agua.' | t" /></span><span class="dato-valor" [appContador]="ind.puntosCriticos"></span></div></div>
+    </section>
+
+    <!-- US34: métricas de validación (administrador) -->
+    @if (auth.rol() === 'ADMIN') {
+      <section class="tarjeta seccion" aria-labelledby="titulo-metricas">
+        <div class="titulo-con-icono">
+          <h2 id="titulo-metricas" class="h3">{{ 'Métricas de uso y validación de hipótesis' | t }}</h2>
+        </div>
+        <ul class="metricas">
+          <li>
+            <div class="fila"><strong>{{ 'Evaluaciones completadas' | t }}</strong>
+              <span>{{ ind.porcentajeEvaluacionesCompletadas | number: '1.0-1' }} % · {{ 'meta' | t }} 60 %</span></div>
+            <span class="barra-pista meta-pista"><span class="barra-relleno" [style.width.%]="ind.porcentajeEvaluacionesCompletadas"></span>
+              <span class="marca-meta" style="left: 60%" aria-hidden="true"></span></span>
+          </li>
+          <li>
+            <div class="fila"><strong>{{ 'Calificaciones de 4 o 5' | t }}</strong>
+              <span>{{ ind.porcentajeCalificacionesUtiles | number: '1.0-1' }} % · {{ '{n} calificaciones' | t: { n: ind.calificaciones } }}</span></div>
+            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="ind.porcentajeCalificacionesUtiles"></span></span>
+          </li>
+          <li>
+            <div class="fila"><strong>{{ 'Evaluaciones sin alerta activa (preventivas)' | t }}</strong>
+              <span>{{ ind.porcentajeEvaluacionesPreventivas | number: '1.0-1' }} % · {{ 'meta' | t }} 40 %</span></div>
+            <span class="barra-pista meta-pista"><span class="barra-relleno" [style.width.%]="ind.porcentajeEvaluacionesPreventivas"></span>
+              <span class="marca-meta" style="left: 40%" aria-hidden="true"></span></span>
+          </li>
+        </ul>
+      </section>
+    }
+  }
+
+  <!-- US26: aptitud por zona -->
+  <section class="seccion" aria-labelledby="titulo-aptitud">
+    <h2 id="titulo-aptitud">{{ 'Aptitud por zona' | t }}{{ departamentoAplicado() ? ' · ' + departamentoAplicado() : '' }}</h2>
+    <div class="grid-2">
+      <div class="tarjeta">
+        <h3>{{ 'Predios por departamento' | t }}</h3>
+        @if (barrasPredios().length) {
+          @defer (on viewport) {
+            <app-grafico [etiquetas]="etiquetasDe(barrasPredios())" [series]="serie(('Predios' | t), barrasPredios())" [horizontal]="true"
+                         [alto]="altoHorizontal(barrasPredios().length)" [descripcion]="'Predios registrados por departamento' | t" />
+          } @placeholder {
+            <div class="esqueleto" style="height: 260px; border-radius: var(--radio-tarjeta)"></div>
+          }
+        } @else { <p class="texto-suave">{{ 'No hay información suficiente para esa zona.' | t }}</p> }
+      </div>
+      <div class="tarjeta">
+        <h3>{{ 'Evaluaciones por grupo de suelo (CUM)' | t }}</h3>
+        @if (gruposCum() === null) { <p class="esqueleto"></p> }
+        @else if (barrasGrupos().length) {
+          @defer (on viewport) {
+            <app-grafico tipo="doughnut" [etiquetas]="etiquetasDe(barrasGrupos())" [series]="serie(('Evaluaciones' | t), barrasGrupos())"
+                         alto="220px" [descripcion]="'Evaluaciones por grupo de suelo' | t" />
+          } @placeholder {
+            <div class="esqueleto" style="height: 220px; border-radius: var(--radio-tarjeta)"></div>
+          }
+        } @else { <p class="texto-suave">{{ 'No hay información suficiente para esa zona.' | t }}</p> }
+      </div>
+    </div>
+    <div class="tarjeta seccion-corta">
+      <h3>{{ 'Cultivos más recomendados' | t }}</h3>
+      <p class="texto-suave nota">{{ 'Veces que el cultivo quedó entre los 3 primeros de una evaluación, con su puntaje promedio.' | t }}</p>
+      @if (cultivos() === null) { <p class="esqueleto"></p> }
+      @else if (barrasCultivos().length) {
+        @defer (on viewport) {
+          <app-grafico [etiquetas]="etiquetasDe(barrasCultivos())" [series]="serie(('Veces en el top 3' | t), barrasCultivos(), '#4E8A5C')"
+                       [detalles]="detallesDe(barrasCultivos())" [horizontal]="true" [alto]="altoHorizontal(barrasCultivos().length)"
+                       [descripcion]="'Cultivos más recomendados' | t" />
+        } @placeholder {
+          <div class="esqueleto" style="height: 260px; border-radius: var(--radio-tarjeta)"></div>
+        }
+      } @else { <p class="texto-suave">{{ 'No hay información suficiente para esa zona.' | t }}</p> }
+    </div>
+  </section>
+
+  <!-- US27: riesgo hídrico por zona -->
+  <section class="seccion" aria-labelledby="titulo-riesgo">
+    <h2 id="titulo-riesgo">{{ 'Riesgo hídrico por zona' | t }}{{ departamentoAplicado() ? ' · ' + departamentoAplicado() : '' }}</h2>
+    <div class="grid-2">
+      <div class="tarjeta">
+        <h3>{{ 'Puntos críticos por nivel' | t }}</h3>
+        @defer (on viewport) {
+          <app-grafico tipo="doughnut" [etiquetas]="etiquetasDe(barrasPuntosNivel())" [series]="serie(('Puntos críticos' | t), barrasPuntosNivel(), coloresNivel)"
+                       alto="220px" [descripcion]="'Puntos críticos de la ANA por nivel de riesgo' | t" />
+        } @placeholder {
+          <div class="esqueleto" style="height: 220px; border-radius: var(--radio-tarjeta)"></div>
+        }
+      </div>
+      <div class="tarjeta exposicion">
+        <h3>{{ 'Predios expuestos a riesgo alto o muy alto' | t }}</h3>
+        @if (exposicion().total) {
+          <p class="porcentaje" [appContador]="exposicion().porcentaje" [decimales]="1" sufijo=" %"></p>
+          <p class="texto-suave">{{ '{a} de {b} predios evaluados.' | t: { a: exposicion().expuestos, b: exposicion().total } }}</p>
+          <span class="barra-pista"><span class="barra-relleno" [style.width.%]="exposicion().porcentaje"></span></span>
+        } @else { <p class="texto-suave">{{ 'No hay información suficiente para esa zona.' | t }}</p> }
+      </div>
+    </div>
+    <div class="tarjeta seccion-corta">
+      <h3>{{ 'Mapa de calor de puntos críticos' | t }}</h3>
+      <p class="texto-suave nota">{{ 'Mueve el mapa para explorar otra zona: se muestran los puntos en un radio de hasta 50 km del centro.' | t }}</p>
+      @defer (on viewport) {
+        <app-mapa [calor]="calor()" [centro]="centroMapa()" [zoom]="9" alto="420px"
+                  (movido)="vista$.next($event)" [etiqueta]="'Mapa de calor de puntos críticos de la ANA' | t" />
+      } @placeholder {
+        <div class="esqueleto" style="height: 420px; border-radius: var(--radio-tarjeta)"></div>
+      }
+    </div>
+    <div class="tarjeta seccion-corta">
+      <div class="fila encabezado-alertas">
+        <h3 class="mb-0">{{ 'Alertas generadas por mes' | t }}</h3>
+        <label class="sr-only" for="dash-anio">{{ 'Año' | t }}</label>
+        <select id="dash-anio" class="anio" [ngModel]="anio()" (ngModelChange)="cargarAlertas($event)">
+          @for (a of anios; track a) { <option [ngValue]="a">{{ a }}</option> }
+        </select>
+      </div>
+      @defer (on viewport) {
+        <app-grafico [etiquetas]="meses" [series]="seriesAlertas()" [apilado]="true" alto="260px" [descripcion]="'Alertas generadas por mes' | t" />
+      } @placeholder {
+        <div class="esqueleto" style="height: 260px; border-radius: var(--radio-tarjeta)"></div>
+      }
+    </div>
+  </section>
+</div>

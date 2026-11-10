@@ -1,0 +1,130 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ 'Datos económicos referenciales' | t }}</h1>
+      <p class="texto-suave mb-0">{{ 'Precios en chacra, rendimientos y costos por cultivo y región, usados en la rentabilidad referencial.' | t }}</p>
+    </div>
+  </div>
+
+  <section class="tarjeta" [class.editando]="editandoId()" aria-labelledby="titulo-form-dato">
+    <div class="titulo-con-icono">
+      <h2 id="titulo-form-dato" class="h3">{{ (editandoId() ? 'Editar dato económico' : 'Registrar dato económico') | t }}</h2>
+    </div>
+    <form class="formulario" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+      <div class="grid-3">
+        <div class="campo">
+          <label for="dato-cultivo">{{ 'Cultivo' | t }}</label>
+          <select id="dato-cultivo" formControlName="cultivoId">
+            <option [ngValue]="null" disabled>{{ 'Elige…' | t }}</option>
+            @for (c of cultivos(); track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
+          </select>
+          @if (errorDe(formulario.controls.cultivoId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="dato-region">{{ 'Región (departamento)' | t }}</label>
+          <select id="dato-region" formControlName="departamentoId">
+            <option [ngValue]="null" disabled>{{ 'Elige…' | t }}</option>
+            @for (r of regiones(); track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }
+          </select>
+          @if (errorDe(formulario.controls.departamentoId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="dato-periodo">{{ 'Periodo' | t }}</label>
+          <input id="dato-periodo" formControlName="periodo" [placeholder]="'2025 o 2025-06' | t" aria-describedby="dato-periodo-ayuda">
+          <span id="dato-periodo-ayuda" class="ayuda">{{ 'Año (AAAA) o año y mes (AAAA-MM).' | t }}</span>
+          @if (errorDe(formulario.controls.periodo, 'Usa el formato AAAA o AAAA-MM.'); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="dato-precio">{{ 'Precio en chacra (S/ por kg)' | t }}</label>
+          <input id="dato-precio" type="number" step="0.01" min="0.01" formControlName="precioChacraKg">
+          @if (errorDe(formulario.controls.precioChacraKg); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="dato-rendimiento">{{ 'Rendimiento (kg por ha)' | t }}</label>
+          <input id="dato-rendimiento" type="number" step="0.01" min="0.01" formControlName="rendimientoKgHa">
+          @if (errorDe(formulario.controls.rendimientoKgHa); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="dato-costo">{{ 'Costo de producción (S/ por ha)' | t }}</label>
+          <input id="dato-costo" type="number" step="0.01" min="0" formControlName="costoProduccionHa">
+          @if (errorDe(formulario.controls.costoProduccionHa); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+      </div>
+      <div class="campo">
+        <label for="dato-fuente">{{ 'Fuente' | t }}</label>
+        <input id="dato-fuente" formControlName="fuente" [placeholder]="'Ej. MIDAGRI - Sistema Integrado de Estadística Agraria (SIEA)' | t">
+        @if (errorDe(formulario.controls.fuente); as e) { <span class="campo-error">{{ e }}</span> }
+      </div>
+
+      @if (errorFormulario()) {
+        <app-aviso [tipo]="duplicado() ? 'advertencia' : 'error'">
+          <p>{{ errorFormulario() }}</p>
+          @if (duplicado()) {
+            <button class="btn btn-secundario btn-pequeno" type="button" (click)="editarExistente()">{{ 'Actualizar el registro existente' | t }}</button>
+          }
+        </app-aviso>
+      }
+      <div class="fila fila-fin">
+        @if (editandoId()) { <button class="btn-texto" type="button" (click)="nuevo()">{{ 'Cancelar edición' | t }}</button> }
+        <button appBoton type="submit" [cargando]="guardando()" [textoCargando]="'Guardando…' | t">
+          <app-icono nombre="check" [tamano]="18" /> {{ (editandoId() ? 'Guardar cambios' : 'Registrar dato') | t }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="seccion" aria-labelledby="titulo-lista-datos">
+    <h2 id="titulo-lista-datos">{{ 'Datos registrados' | t }}</h2>
+    <div class="fila filtros">
+      <div class="campo">
+        <label for="filtro-cultivo">{{ 'Cultivo' | t }}</label>
+        <select id="filtro-cultivo" [ngModel]="filtroCultivo()" (ngModelChange)="filtroCultivo.set($event); buscar()">
+          <option [ngValue]="null">{{ 'Todos' | t }}</option>
+          @for (c of cultivos(); track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
+        </select>
+      </div>
+      <div class="campo">
+        <label for="filtro-region">{{ 'Región' | t }}</label>
+        <select id="filtro-region" [ngModel]="filtroRegion()" (ngModelChange)="filtroRegion.set($event); buscar()">
+          <option [ngValue]="null">{{ 'Todas' | t }}</option>
+          @for (r of regiones(); track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }
+        </select>
+      </div>
+    </div>
+
+    @if (error()) {
+      <app-aviso tipo="error">{{ error() }}</app-aviso>
+    } @else if (!datos()) {
+      <div class="tarjeta"><app-cargando [lineas]="4" /></div>
+    } @else if (datos()!.length === 0) {
+      <p class="texto-suave">{{ 'No hay datos económicos con estos filtros.' | t }}</p>
+    } @else {
+      <div class="tabla-contenedor tarjeta sin-relleno">
+        <table>
+          <caption class="sr-only">{{ 'Datos económicos registrados' | t }}</caption>
+          <thead>
+            <tr><th scope="col">{{ 'Cultivo' | t }}</th><th scope="col">{{ 'Región' | t }}</th><th scope="col">{{ 'Periodo' | t }}</th>
+              <th scope="col" class="num">{{ 'Precio/kg' | t }}</th><th scope="col" class="num">{{ 'Rendimiento' | t }}</th>
+              <th scope="col" class="num">{{ 'Costo/ha' | t }}</th><th scope="col">{{ 'Fuente' | t }}</th>
+              <th scope="col"><span class="sr-only">{{ 'Acciones' | t }}</span></th></tr>
+          </thead>
+          <tbody>
+            @for (d of datos(); track d.id) {
+              <tr>
+                <td>{{ d.cultivo }}</td>
+                <td>{{ d.region }}</td>
+                <td>{{ d.periodo }}</td>
+                <td class="num">{{ d.precioChacraKg | currency: 'PEN' : 'symbol-narrow' : '1.2-2' }}</td>
+                <td class="num">{{ d.rendimientoKgHa | number: '1.0-0' }} kg/ha</td>
+                <td class="num">{{ d.costoProduccionHa | currency: 'PEN' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td><small>{{ d.fuente }}</small></td>
+                <td><button class="btn btn-secundario btn-pequeno" type="button" (click)="editar(d)">
+                  <app-icono nombre="lapiz" [tamano]="14" /> {{ 'Editar' | t }}</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

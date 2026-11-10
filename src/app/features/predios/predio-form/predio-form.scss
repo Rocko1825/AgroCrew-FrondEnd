@@ -1,0 +1,18 @@
+.catastro-tarjeta { border-left: 4px solid var(--color-acento); }
+.punto-listo { justify-self: start; animation: emerger 0.3s var(--curva) both; }
+
+fieldset { border: none; padding: 0; }
+legend { padding: 0; margin-bottom: 6px; }
+.fuentes { display: grid; gap: 8px; }
+.fuente {
+  position: relative; cursor: pointer;
+  input { position: absolute; opacity: 0; }
+  span {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    border: 2px solid var(--color-borde); transition: border-color 0.2s ease, background-color 0.2s ease;
+    app-icono { color: var(--color-acento); }
+  }
+  input:checked + span { border-color: var(--color-acento); background: var(--color-marca-claro); font-weight: 600; }
+  input:focus-visible + span { box-shadow: var(--anillo-foco); }
+  &:hover span { border-color: var(--color-acento-suave); }
+}

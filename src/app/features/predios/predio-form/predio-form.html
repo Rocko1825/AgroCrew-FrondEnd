@@ -1,0 +1,182 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ (esEdicion() ? 'Editar predio' : 'Registrar predio') | t }}</h1>
+    </div>
+    <a class="btn btn-secundario" [routerLink]="esEdicion() ? ['/predios', id()] : '/predios'">
+      <app-icono nombre="atras" [tamano]="18" /> {{ 'Cancelar' | t }}</a>
+  </div>
+
+  <!-- US07: búsqueda por código catastral (solo al registrar) -->
+  @if (!esEdicion()) {
+    <section class="tarjeta catastro-tarjeta" aria-labelledby="titulo-catastro">
+      <div class="titulo-con-icono">
+        <div>
+          <h2 id="titulo-catastro" class="h3">{{ '¿Tienes el código catastral de tu predio?' | t }}</h2>
+          <p class="texto-suave mb-0">
+            {{ 'Búscalo en el Catastro Rural del MIDAGRI y cargamos su ubicación y área oficiales. Si no lo tienes, completa el formulario y marca tu predio en el mapa.' | t }}
+          </p>
+        </div>
+      </div>
+      <form class="fila catastro" [formGroup]="catastro" (ngSubmit)="buscarCatastro()" novalidate>
+        <div class="campo">
+          <label for="cat-departamento">{{ 'Departamento' | t }}</label>
+          <select id="cat-departamento" formControlName="departamentoId">
+            <option [ngValue]="null" disabled>{{ 'Elige…' | t }}</option>
+            @for (d of departamentos(); track d.id) { <option [ngValue]="d.id">{{ d.nombre }}</option> }
+          </select>
+          @if (errorDe(catastro.controls.departamentoId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="cat-codigo">{{ 'Código catastral' | t }}</label>
+          <input id="cat-codigo" formControlName="codigo" [placeholder]="'Ej. 706980' | t" autocomplete="off">
+          @if (errorDe(catastro.controls.codigo, 'Usa solo letras, números y guiones.'); as e) {
+            <span class="campo-error">{{ e }}</span>
+          }
+        </div>
+        <button appBoton variante="secundario" type="submit" [cargando]="estadoCatastro() === 'buscando'"
+                [textoCargando]="'Buscando…' | t"><app-icono nombre="busqueda" [tamano]="18" /> {{ 'Buscar' | t }}</button>
+      </form>
+
+      @switch (estadoCatastro()) {
+        @case ('encontrado') {
+          @if (resultadoCatastro(); as r) {
+            <app-aviso tipo="exito" [titulo]="'Encontramos tu predio' | t" class="seccion-corta">
+              <p>
+                <strong>{{ r.nombre }}</strong> · {{ r.departamento }} / {{ r.provincia }} / {{ r.distrito }}<br>
+                {{ 'Área oficial' | t }}: {{ r.areaHa | number: '1.0-2' }} ha ·
+                {{ 'Ubicación' | t }}: {{ r.latitud | number: '1.4-4' }}, {{ r.longitud | number: '1.4-4' }}<br>
+                <small>{{ 'Fuente' | t }}: {{ r.fuente }}</small>
+              </p>
+              <button class="btn btn-pequeno" type="button" (click)="usarCatastro()">
+                <app-icono nombre="check" [tamano]="16" /> {{ 'Confirmar y usar estos datos' | t }}</button>
+            </app-aviso>
+          }
+        }
+        @case ('no-encontrado') {
+          <app-aviso tipo="advertencia" [titulo]="'No encontramos ese código' | t" class="seccion-corta">
+            <p>{{ mensajeCatastro() }}</p>
+            <button class="btn btn-secundario btn-pequeno" type="button" (click)="registrarConMapa()">{{ 'Registrar marcando en el mapa' | t }}</button>
+          </app-aviso>
+        }
+        @case ('no-disponible') {
+          <app-aviso tipo="advertencia" [titulo]="'El catastro no está disponible por ahora' | t" class="seccion-corta">
+            <p>{{ 'El servicio del MIDAGRI no respondió. Puedes intentarlo más tarde o registrar tu predio marcándolo en el mapa.' | t }}</p>
+            <button class="btn btn-secundario btn-pequeno" type="button" (click)="registrarConMapa()">{{ 'Registrar marcando en el mapa' | t }}</button>
+          </app-aviso>
+        }
+      }
+    </section>
+  }
+
+  @if (cargando()) {
+    <app-cargando [texto]="'Cargando tu predio…' | t" />
+  }
+
+  <form class="seccion" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+    <div class="grid-2">
+      <section class="tarjeta formulario" aria-labelledby="titulo-datos">
+        <div class="titulo-con-icono">
+          <h2 id="titulo-datos" class="h3">{{ 'Datos del predio' | t }}</h2>
+        </div>
+        <div class="campo">
+          <label for="predio-nombre">{{ 'Nombre del predio' | t }}</label>
+          <input id="predio-nombre" formControlName="nombre" [placeholder]="'Ej. Chacra La Esperanza' | t">
+          @if (errorDe(formulario.controls.nombre); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="predio-departamento">{{ 'Departamento' | t }}</label>
+          <select id="predio-departamento" formControlName="departamentoId">
+            <option [ngValue]="null" disabled>{{ 'Elige tu departamento' | t }}</option>
+            @for (d of departamentos(); track d.id) { <option [ngValue]="d.id">{{ d.nombre }}</option> }
+          </select>
+          @if (errorDe(formulario.controls.departamentoId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="predio-provincia">{{ 'Provincia' | t }}</label>
+          <select id="predio-provincia" formControlName="provinciaId" [attr.disabled]="provincias().length ? null : true">
+            <option [ngValue]="null" disabled>{{ (provincias().length ? 'Elige tu provincia' : 'Primero elige el departamento') | t }}</option>
+            @for (p of provincias(); track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
+          </select>
+          @if (errorDe(formulario.controls.provinciaId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="campo">
+          <label for="predio-distrito">{{ 'Distrito' | t }}</label>
+          <select id="predio-distrito" formControlName="distritoId" [attr.disabled]="distritos().length ? null : true">
+            <option [ngValue]="null" disabled>{{ (distritos().length ? 'Elige tu distrito' : 'Primero elige la provincia') | t }}</option>
+            @for (d of distritos(); track d.id) { <option [ngValue]="d.id">{{ d.nombre }}</option> }
+          </select>
+          @if (errorDe(formulario.controls.distritoId); as e) { <span class="campo-error">{{ e }}</span> }
+        </div>
+        <div class="grid-2">
+          <div class="campo">
+            <label for="predio-area">{{ 'Área (hectáreas)' | t }}</label>
+            <input id="predio-area" type="number" step="0.01" min="0.01" formControlName="areaHa" inputmode="decimal">
+            @if (errorDe(formulario.controls.areaHa); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="predio-altitud">{{ 'Altitud (msnm)' | t }} <small>({{ 'opcional' | t }})</small></label>
+            <input id="predio-altitud" type="number" min="0" max="6800" formControlName="altitudMsnm" inputmode="numeric"
+                   aria-describedby="predio-altitud-ayuda">
+            <span id="predio-altitud-ayuda" class="ayuda">{{ 'Si no la sabes, usamos la de la capital de tu distrito.' | t }}</span>
+            @if (errorDe(formulario.controls.altitudMsnm); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+        </div>
+        <fieldset>
+          <legend>{{ 'Fuente de agua' | t }}</legend>
+          <div class="fuentes">
+            <label class="fuente"><input type="radio" formControlName="fuenteAgua" value="SECANO">
+              <span><app-icono nombre="lluvia" /> {{ 'Secano (solo lluvia)' | t }}</span></label>
+            <label class="fuente"><input type="radio" formControlName="fuenteAgua" value="RIEGO_GRAVEDAD">
+              <span><app-icono nombre="gota" /> {{ 'Riego por gravedad' | t }}</span></label>
+            <label class="fuente"><input type="radio" formControlName="fuenteAgua" value="RIEGO_TECNIFICADO">
+              <span><app-icono nombre="chispa" /> {{ 'Riego tecnificado (goteo o aspersión)' | t }}</span></label>
+          </div>
+        </fieldset>
+        <div class="campo">
+          <label for="predio-codigo">{{ 'Código catastral' | t }} <small>({{ 'opcional' | t }})</small></label>
+          <input id="predio-codigo" formControlName="codigoCatastral">
+        </div>
+      </section>
+
+      <section class="tarjeta formulario" aria-labelledby="titulo-ubicacion">
+        <div class="titulo-con-icono">
+          <div>
+            <h2 id="titulo-ubicacion" class="h3">{{ 'Ubicación' | t }}</h2>
+            <p class="texto-suave mb-0">{{ 'Pulsa en el mapa sobre tu terreno, o escribe sus coordenadas.' | t }}</p>
+          </div>
+        </div>
+        @defer (on viewport) {
+          <app-mapa [seleccionable]="true" [punto]="punto()" [centro]="centroMapa()" [zoom]="zoomMapa()"
+                    (puntoSeleccionado)="marcarEnMapa($event)" [etiqueta]="'Mapa para marcar la ubicación del predio' | t" />
+        } @placeholder {
+          <div class="esqueleto" style="height: 340px; border-radius: var(--radio-tarjeta)"></div>
+        }
+        @if (punto()) {
+          <span class="chip punto-listo"><app-icono nombre="check" [tamano]="14" /> {{ 'Ubicación marcada' | t }}</span>
+        }
+        <div class="grid-2">
+          <div class="campo">
+            <label for="predio-latitud">{{ 'Latitud' | t }}</label>
+            <input id="predio-latitud" type="number" step="0.000001" formControlName="latitud" inputmode="decimal">
+            @if (errorDe(formulario.controls.latitud); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="predio-longitud">{{ 'Longitud' | t }}</label>
+            <input id="predio-longitud" type="number" step="0.000001" formControlName="longitud" inputmode="decimal">
+            @if (errorDe(formulario.controls.longitud); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+        </div>
+      </section>
+    </div>
+
+    @if (error()) {
+      <app-aviso tipo="error" class="seccion-corta">{{ error() }}</app-aviso>
+    }
+    <div class="fila fila-fin seccion-corta">
+      <button appBoton type="submit" [cargando]="guardando()" [textoCargando]="'Guardando…' | t">
+        <app-icono nombre="check" [tamano]="18" /> {{ (esEdicion() ? 'Guardar cambios' : 'Guardar predio') | t }}
+      </button>
+    </div>
+  </form>
+</div>

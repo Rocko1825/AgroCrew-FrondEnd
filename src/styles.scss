@@ -1,0 +1,382 @@
+@use 'variables' as v;
+
+/* ==========================================================================
+   AgroCrew · estilos globales
+   Guía de estilo del informe (sección 3.1): un color de marca (#2F5D3A), fuentes del sistema,
+   unidades rem, tarjetas reutilizables y un quiebre a 768 px.
+   Sprint 3: modo oscuro y microanimaciones sutiles que respetan "reducir movimiento".
+   ========================================================================== */
+
+/* ---------- Tema claro (por defecto) ---------- */
+:root {
+  color-scheme: light;
+  --color-marca: #{v.$color-marca};
+  --color-marca-hover: #264D30;
+  --color-marca-oscuro: #{v.$color-marca-oscuro};
+  --color-marca-claro: #{v.$color-marca-claro};
+  /* Verde para textos y enlaces (en modo oscuro se aclara para mantener el contraste AA). */
+  --color-acento: #2F5D3A;
+  --color-acento-suave: #9DBFA5;
+  --color-borde: #{v.$color-borde};
+  --color-fondo: #F4F6F3;
+  --color-superficie: #FFFFFF;
+  --color-superficie-2: #F7F9F6;
+  --color-texto: #1F2A21;
+  --color-texto-suave: #4A5A4E;
+  --color-input: #FFFFFF;
+  --color-input-borde: #7D877F;
+  --color-pista: #E9EDE8;
+  --color-pie: #1F2A21;
+  --color-gris-verdoso: #C9D3CB;
+
+  --aviso-fondo: #F5EBCF;  --aviso-texto: #5A4410;  --aviso-borde: #E2CF98;
+  --error-fondo: #FBE9E7;  --error-texto: #8E1B12;  --error-borde: #EBC0BB;
+  --exito-fondo: #E6F0E8;  --exito-texto: #2F5D3A;  --exito-borde: #BCD3C1;
+  --info-fondo: #EEF3F7;   --info-texto: #234560;   --info-borde: #C9D8E4;
+
+  --nivel-bajo-fondo: #E6F0E8;     --nivel-bajo-texto: #2F5D3A;
+  --nivel-medio-fondo: #FFF1C7;    --nivel-medio-texto: #6B4E00;
+  --nivel-alto-fondo: #FDE2CF;     --nivel-alto-texto: #8A3B00;
+  --nivel-muy-alto-fondo: #F9D6D3; --nivel-muy-alto-texto: #8E1B12;
+
+  --medidor-alta: #2F7D4A;
+  --medidor-media: #B98900;
+  --medidor-baja: #B3372B;
+  --color-lluvia: #3A6E96;
+  --color-lluvia-fondo: #E6EEF5;
+
+  --sombra-suave: 0 1px 2px rgba(31, 42, 33, 0.05), 0 2px 6px rgba(31, 42, 33, 0.04);
+  --sombra-elevada: 0 6px 18px rgba(31, 42, 33, 0.10), 0 2px 6px rgba(31, 42, 33, 0.06);
+  --anillo-foco: 0 0 0 3px rgba(47, 93, 58, 0.22);
+
+  --fuente: #{v.$fuente};
+  --ancho-maximo: #{v.$ancho-maximo};
+  --radio-boton: #{v.$radio-boton};
+  --radio-tarjeta: #{v.$radio-tarjeta};
+  /* Curva de salida suave (ease-out "quint"), la que recomienda Emil Kowalski para interfaces. */
+  --curva: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ---------- Tema oscuro ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-marca: #2F5D3A;
+  --color-marca-hover: #3A7048;
+  --color-marca-claro: #213A28;
+  --color-acento: #8CCB98;
+  --color-acento-suave: #4C7A57;
+  --color-borde: #2C3A30;
+  --color-fondo: #0F1511;
+  --color-superficie: #172019;
+  --color-superficie-2: #1D271F;
+  --color-texto: #E4EBE5;
+  --color-texto-suave: #A7B5AA;
+  --color-input: #111813;
+  --color-input-borde: #5C6B60;
+  --color-pista: #263028;
+  --color-pie: #0A0F0B;
+
+  --aviso-fondo: #3A3014;  --aviso-texto: #F1DFA6;  --aviso-borde: #5C4B1C;
+  --error-fondo: #3D1A17;  --error-texto: #F5B9B1;  --error-borde: #6A2B25;
+  --exito-fondo: #1D3524;  --exito-texto: #A8DDB2;  --exito-borde: #2F5A3A;
+  --info-fondo: #172A38;   --info-texto: #A9CDEB;   --info-borde: #2A4A62;
+
+  --nivel-bajo-fondo: #1D3524;     --nivel-bajo-texto: #A8DDB2;
+  --nivel-medio-fondo: #3A3014;    --nivel-medio-texto: #F1D58A;
+  --nivel-alto-fondo: #432713;     --nivel-alto-texto: #F7B98A;
+  --nivel-muy-alto-fondo: #451C18; --nivel-muy-alto-texto: #F6ABA3;
+
+  --medidor-alta: #6CC283;
+  --medidor-media: #E3B341;
+  --medidor-baja: #F0877B;
+  --color-lluvia: #6FA8D6;
+  --color-lluvia-fondo: #1C2A35;
+
+  --sombra-suave: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sombra-elevada: 0 8px 22px rgba(0, 0, 0, 0.45);
+  --anillo-foco: 0 0 0 3px rgba(140, 203, 152, 0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 100%; scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+img { max-width: 100%; }
+
+/* Radio animable de la «linterna» del fondo del acceso. */
+@property --radio-foco { syntax: '<length>'; inherits: true; initial-value: 230px; }
+
+/* Edge añade su propio botón para ver la contraseña; ya tenemos uno, así que se oculta. */
+input::-ms-reveal, input::-ms-clear { display: none; }
+
+/* ---------- Tipografía: tres niveles ---------- */
+h1, h2, h3 { line-height: 1.25; margin: 0 0 0.75rem; color: var(--color-texto); }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.025em; }
+h2 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+h3 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+.h3 { font-size: 1.2rem; }
+p { margin: 0 0 0.75rem; }
+small, .texto-suave { color: var(--color-texto-suave); }
+a { color: var(--color-acento); text-underline-offset: 3px; transition: color 0.2s ease; }
+a:hover { color: var(--color-marca-hover); }
+:root[data-theme='dark'] a:hover { color: #B4E3BD; }
+
+@include v.movil {
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.5rem; }
+}
+
+/* ---------- Contenedor, página y secciones ---------- */
+.contenedor { width: 100%; max-width: var(--ancho-maximo); margin: 0 auto; padding: 0 16px; }
+.pagina { padding-top: 32px; padding-bottom: 64px; }
+.pagina-encabezado {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 24px;
+}
+.pagina-encabezado h1 { margin: 0; }
+.antetitulo {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  font-size: 0.9rem; font-weight: 500;
+  color: var(--color-texto-suave); text-decoration: none;
+}
+.seccion { margin-top: 40px; }
+.seccion-corta { display: block; margin-top: 16px; }
+.angosto { max-width: 640px; }
+.catastro { align-items: flex-end; }
+.catastro .campo { flex: 1 1 200px; }
+
+/* Entrada escalonada del contenido de cada página. */
+.pagina > * { animation: aparecer 0.45s var(--curva) both; }
+.pagina > *:nth-child(2) { animation-delay: 0.05s; }
+.pagina > *:nth-child(3) { animation-delay: 0.1s; }
+.pagina > *:nth-child(4) { animation-delay: 0.15s; }
+.pagina > *:nth-child(n + 5) { animation-delay: 0.2s; }
+
+/* ---------- Grid responsive: una columna a 768 px o menos ---------- */
+.grid-2, .grid-3, .grid-4 { display: grid; gap: 20px; }
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@include v.movil { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.fila-fin { justify-content: flex-end; }
+.pila-carga { display: grid; gap: 12px; }
+
+/* Texto secundario con un punto de color (en lugar de un chip). */
+.estado-punto { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--color-texto-suave); white-space: nowrap; }
+.estado-punto::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--color-texto-suave); }
+.estado-punto.bien::before { background: var(--medidor-alta); }
+.estado-punto.atencion::before { background: var(--medidor-media); }
+.estado-punto.mal::before { background: var(--medidor-baja); }
+
+/* Franja de indicadores: una sola tarjeta con separadores finos (el gap de 1px deja ver el borde). */
+.franja {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px;
+  overflow: hidden; background: var(--color-borde);
+}
+.tarjeta.franja { padding: 0; }
+.franja.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.franja > * { padding: 16px 20px; background: var(--color-superficie); }
+@include v.movil { .franja, .franja.tres { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.unidad { font-size: 0.7em; font-weight: 600; color: var(--color-texto-suave); margin-left: 2px; }
+
+/* ---------- Botones: primario, secundario, peligro y de texto ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px;
+  border: 2px solid var(--color-marca);
+  border-radius: var(--radio-boton);
+  background: var(--color-marca);
+  color: #FFFFFF;
+  font: inherit; font-weight: 600; line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.12s ease;
+}
+.btn:hover:not(:disabled) {
+  background: var(--color-marca-hover); border-color: var(--color-marca-hover); color: #FFFFFF;
+  box-shadow: var(--sombra-elevada);
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.btn-secundario { background: var(--color-superficie); color: var(--color-texto); border: 1px solid var(--color-input-borde); padding: 13px 25px; }
+.btn-secundario.btn-pequeno { padding: 7px 15px; }
+.btn-secundario:hover:not(:disabled) { background: var(--color-superficie-2); color: var(--color-texto); border-color: var(--color-texto-suave); box-shadow: none; }
+.btn-peligro { background: #A1231A; border-color: #A1231A; color: #FFFFFF; }
+.btn-peligro:hover:not(:disabled) { background: #861C14; border-color: #861C14; }
+.btn-texto {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 4px 0; color: var(--color-acento);
+  font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.btn-texto:hover { color: var(--color-marca-hover); }
+:root[data-theme='dark'] .btn-texto:hover { color: #B4E3BD; }
+.btn-pequeno { padding: 6px 14px; font-size: 0.9rem; }
+.btn-bloque { width: 100%; }
+
+:focus-visible { outline: 3px solid var(--color-acento); outline-offset: 2px; }
+
+/* ---------- Tarjetas ---------- */
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-tarjeta);
+  padding: 20px;
+  transition: background-color 0.3s ease, border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--curva);
+}
+.tarjeta > :last-child { margin-bottom: 0; }
+.tarjeta-interactiva:hover { transform: translateY(-3px); box-shadow: var(--sombra-elevada); border-color: var(--color-acento-suave); }
+
+/* Círculo con ícono para encabezados de tarjetas y datos. */
+.icono-circulo {
+  display: inline-grid; place-items: center; flex: none;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--color-marca-claro); color: var(--color-acento);
+}
+.titulo-con-icono { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.titulo-con-icono h2, .titulo-con-icono h3 { margin: 0; }
+
+/* ---------- Formularios ---------- */
+.formulario { display: grid; gap: 16px; }
+.campo { display: grid; gap: 6px; }
+.campo label, .campo .etiqueta { font-weight: 600; }
+.campo .ayuda { font-size: 0.875rem; color: var(--color-texto-suave); }
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-texto);
+  background: var(--color-input);
+  border: 1px solid var(--color-input-borde);
+  border-radius: var(--radio-boton);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--color-acento); box-shadow: var(--anillo-foco); }
+textarea { resize: vertical; min-height: 90px; }
+input[type='checkbox'], input[type='radio'] { width: auto; accent-color: var(--color-marca); }
+input:disabled, select:disabled { opacity: 0.6; }
+.campo-error { color: var(--error-texto); font-size: 0.875rem; animation: aparecer 0.25s ease both; }
+.ng-touched.ng-invalid:not(form):not(fieldset) { border-color: var(--error-texto); }
+fieldset { border: 1px solid var(--color-borde); border-radius: var(--radio-tarjeta); padding: 16px; margin: 0; }
+legend { font-weight: 600; padding: 0 6px; }
+.opciones { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.opciones label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; cursor: pointer; }
+
+/* ---------- Chips y niveles ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 999px;
+  font-size: 0.85rem; font-weight: 600; line-height: 1.6;
+  background: var(--color-pista); color: var(--color-texto-suave);
+  white-space: nowrap;
+}
+.nivel-BAJO, .nivel-ALTA, .nivel-FAVORABLE { background: var(--nivel-bajo-fondo); color: var(--nivel-bajo-texto); }
+.nivel-MEDIO, .nivel-MEDIA, .nivel-NEUTRO { background: var(--nivel-medio-fondo); color: var(--nivel-medio-texto); }
+.nivel-ALTO, .nivel-LIMITANTE { background: var(--nivel-alto-fondo); color: var(--nivel-alto-texto); }
+.nivel-MUY_ALTO, .nivel-BAJA { background: var(--nivel-muy-alto-fondo); color: var(--nivel-muy-alto-texto); }
+
+.dato { display: grid; gap: 2px; }
+.dato-etiqueta { font-size: 0.875rem; color: var(--color-texto-suave); }
+.dato-valor { font-size: 1.4rem; font-weight: 700; line-height: 1.3; }
+
+/* ---------- Tablas ---------- */
+.tabla-contenedor { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--color-superficie); }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--color-borde); vertical-align: top; }
+th { font-size: 0.875rem; color: var(--color-texto-suave); font-weight: 600; }
+tbody tr { transition: background-color 0.15s ease; }
+tbody tr:hover { background: var(--color-superficie-2); }
+
+/* ---------- Barras (gráficos sin librerías): crecen al aparecer ---------- */
+.barra-pista { display: block; height: 12px; background: var(--color-pista); border-radius: 6px; overflow: hidden; }
+.barra-relleno {
+  display: block; height: 100%; border-radius: 6px;
+  background: var(--color-marca);
+  transform-origin: left center;
+  animation: crecer 0.9s var(--curva) both;
+}
+
+/* ---------- Esqueletos de carga ---------- */
+.esqueleto {
+  display: block; height: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-pista) 25%, var(--color-superficie-2) 37%, var(--color-pista) 63%);
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease infinite;
+}
+
+/* ---------- Detalles que se despliegan ---------- */
+.desplegable { animation: desplegar 0.3s var(--curva) both; }
+
+/* ---------- Utilidades ---------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.centrado { text-align: center; }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+
+/* ---------- Mapas (Leaflet) ---------- */
+.mapa { height: 340px; border: 1px solid var(--color-borde); border-radius: var(--radio-tarjeta); }
+@include v.movil { .mapa { height: 280px; } }
+.leaflet-container { font-family: var(--fuente); background: var(--color-pista); }
+:root[data-theme='dark'] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.5); }
+:root[data-theme='dark'] .leaflet-popup-content-wrapper,
+:root[data-theme='dark'] .leaflet-popup-tip,
+:root[data-theme='dark'] .leaflet-tooltip { background: var(--color-superficie); color: var(--color-texto); border-color: var(--color-borde); }
+:root[data-theme='dark'] .leaflet-bar a { background: var(--color-superficie); color: var(--color-texto); border-color: var(--color-borde); }
+:root[data-theme='dark'] .leaflet-control-attribution { background: rgba(23, 32, 25, 0.8); color: var(--color-texto-suave); }
+
+/* ---------- Notificaciones (ngx-sonner) con los colores de la guía de estilo ---------- */
+html [data-sonner-toaster][data-sonner-theme] {
+  font-family: var(--fuente);
+  --normal-bg: var(--color-superficie);
+  --normal-border: var(--color-borde);
+  --normal-text: var(--color-texto);
+  --success-bg: var(--exito-fondo);
+  --success-border: var(--exito-borde);
+  --success-text: var(--exito-texto);
+  --error-bg: var(--error-fondo);
+  --error-border: var(--error-borde);
+  --error-text: var(--error-texto);
+  --info-bg: var(--info-fondo);
+  --info-border: var(--info-borde);
+  --info-text: var(--info-texto);
+  --border-radius: 10px;
+}
+
+/* ---------- Animaciones ---------- */
+@keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes desplegar { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes crecer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes brillo { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@keyframes deslizar { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes emerger { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+/* Transición suave entre pantallas (View Transitions del router). */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.22s; }
+
+/* Accesibilidad: si el sistema pide reducir el movimiento, se quitan las animaciones. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

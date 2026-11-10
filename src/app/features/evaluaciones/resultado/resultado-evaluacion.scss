@@ -1,0 +1,44 @@
+@use 'variables' as v;
+
+.destacado {
+  position: relative; overflow: hidden;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 28px; border-radius: 16px; color: #FFFFFF;
+  background: #2F5D3A;
+
+  h1 { color: #FFFFFF; margin: 6px 0 6px; font-size: 2rem; }
+  .volver { display: inline-flex; align-items: center; gap: 4px; color: #DCE8DF; text-decoration: none; font-weight: 600; }
+  .volver:hover { color: #FFFFFF; }
+  .meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0; color: #DCE8DF; }
+  .estado { padding: 1px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); font-weight: 600; }
+  .estado.parcial { background: #E3B341; color: #3A2C00; }
+  @include v.movil { padding: 22px 18px; h1 { font-size: 1.6rem; } }
+}
+
+.mejor {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95); color: #1F2A21;
+  animation: emerger 0.5s 0.15s var(--curva) both;
+  div { display: grid; }
+  small { color: #4A5A4E; }
+  strong { font-size: 1.3rem; }
+  span { font-size: 0.9rem; color: #2F5D3A; font-weight: 600; }
+}
+
+.datos small { color: var(--color-texto-suave); }
+.datos .dato-valor .chip { font-size: 0.95rem; }
+
+.cuerpo-resultado { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.principal { display: grid; gap: 40px; }
+.principal .bloque > h2 { font-size: 1.5rem; }
+.lateral { display: grid; gap: 20px; }
+@include v.movil {
+  .cuerpo-resultado { grid-template-columns: 1fr; }
+}
+
+.explicacion { border-left: 4px solid var(--color-acento); }
+.encabezado-explicacion { justify-content: space-between; margin-bottom: 12px; }
+.explicacion .nota { font-size: 0.875rem; }
+.consultado { margin-bottom: 16px; gap: 16px 24px; }
+app-calificar-evaluacion { display: block; }

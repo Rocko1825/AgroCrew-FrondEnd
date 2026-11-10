@@ -1,0 +1,132 @@
+<div class="escena" [class.fondo-completo]="fondoCompleto()" (dblclick)="alternarFondo($event)">
+<app-fondo-acceso #fondo [completo]="fondoCompleto()" />
+@if (fondo.hayFoto()) {
+  <button type="button" class="control-fondo" (click)="fondoCompleto() ? fondoCompleto.set(false) : verFondo()">
+    {{ (fondoCompleto() ? 'Doble clic para ocultar el fondo' : 'Doble clic para ver el fondo completo') | t }}
+  </button>
+}
+<div class="contenedor pagina">
+  <div class="acceso">
+    <!-- Portada animada: frases y partículas -->
+    <app-portada-acceso #portada />
+
+    <!-- Formularios -->
+    <section class="tarjeta panel" [attr.aria-label]="'Acceso' | t" (input)="portada.pulso()">
+      @if (sesion() === 'expirada') {
+        <app-aviso tipo="advertencia" class="aviso-sesion">{{ 'Tu sesión venció. Vuelve a iniciar sesión para continuar.' | t }}</app-aviso>
+      }
+
+      <div class="pestanas" role="tablist">
+        <button type="button" role="tab" id="tab-login" aria-controls="panel-login"
+                [attr.aria-selected]="pestana() === 'login'" (click)="pestana.set('login')">{{ 'Iniciar sesión' | t }}</button>
+        <button type="button" role="tab" id="tab-registro" aria-controls="panel-registro"
+                [attr.aria-selected]="pestana() === 'registro'" (click)="pestana.set('registro')">{{ 'Crear cuenta' | t }}</button>
+        <span class="indicador" [class.derecha]="pestana() === 'registro'" aria-hidden="true"></span>
+      </div>
+
+      @if (pestana() === 'login') {
+        <!-- Iniciar sesión (US02) -->
+        <form id="panel-login" role="tabpanel" aria-labelledby="tab-login" class="formulario desplegable"
+              [formGroup]="login" (ngSubmit)="ingresar()" novalidate>
+          <div class="campo">
+            <label for="login-email">{{ 'Correo electrónico' | t }}</label>
+            <input id="login-email" type="email" formControlName="email" autocomplete="email"
+                   [attr.aria-invalid]="!!errorDe(login.controls.email)" aria-describedby="login-email-error">
+            @if (errorDe(login.controls.email); as e) { <span id="login-email-error" class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="login-password">{{ 'Contraseña' | t }}</label>
+            <div class="con-boton">
+              <input id="login-password" [type]="verPassword() ? 'text' : 'password'" formControlName="password"
+                     autocomplete="current-password" [attr.aria-invalid]="!!errorDe(login.controls.password)"
+                     aria-describedby="login-password-error">
+              <button type="button" class="btn-texto ver" (click)="verPassword.set(!verPassword())"
+                      [attr.aria-pressed]="verPassword()">{{ (verPassword() ? 'Ocultar' : 'Mostrar') | t }}</button>
+            </div>
+            @if (errorDe(login.controls.password); as e) { <span id="login-password-error" class="campo-error">{{ e }}</span> }
+          </div>
+          @if (errorLogin()) {
+            <app-aviso tipo="error">{{ errorLogin() }}</app-aviso>
+          }
+          <button appBoton type="submit" [bloque]="true" [cargando]="ingresando()" [textoCargando]="'Ingresando…' | t">
+            {{ 'Ingresar' | t }}
+          </button>
+          <div class="fila enlaces">
+            <a routerLink="/recuperar">{{ '¿Olvidaste tu contraseña?' | t }}</a>
+            <button type="button" class="btn-texto" (click)="pestana.set('registro')">{{ 'Crear una cuenta' | t }}</button>
+          </div>
+        </form>
+      } @else {
+        <!-- Crear cuenta (US01) -->
+        <form id="panel-registro" role="tabpanel" aria-labelledby="tab-registro" class="formulario desplegable"
+              [formGroup]="registro" (ngSubmit)="registrarme()" novalidate>
+          <fieldset class="tipo">
+            <legend>{{ 'Soy' | t }}</legend>
+            <div class="tipos">
+              <label class="opcion-tipo">
+                <input type="radio" formControlName="tipoUsuario" value="PRODUCTOR">
+                <span><app-icono nombre="hoja" /> <strong>{{ 'Productor agrícola' | t }}</strong>
+                  <small>{{ 'Quiero saber qué sembrar en mi terreno' | t }}</small></span>
+              </label>
+              <label class="opcion-tipo">
+                <input type="radio" formControlName="tipoUsuario" value="ASESOR">
+                <span><app-icono nombre="grafico" /> <strong>{{ 'Asesor o gobierno local' | t }}</strong>
+                  <small>{{ 'Quiero ver indicadores por zona' | t }}</small></span>
+              </label>
+            </div>
+          </fieldset>
+          <div class="grid-2">
+            <div class="campo">
+              <label for="reg-nombres">{{ 'Nombres' | t }}</label>
+              <input id="reg-nombres" formControlName="nombres" autocomplete="given-name"
+                     [attr.aria-invalid]="!!errorDe(registro.controls.nombres)">
+              @if (errorDe(registro.controls.nombres); as e) { <span class="campo-error">{{ e }}</span> }
+            </div>
+            <div class="campo">
+              <label for="reg-apellidos">{{ 'Apellidos' | t }}</label>
+              <input id="reg-apellidos" formControlName="apellidos" autocomplete="family-name"
+                     [attr.aria-invalid]="!!errorDe(registro.controls.apellidos)">
+              @if (errorDe(registro.controls.apellidos); as e) { <span class="campo-error">{{ e }}</span> }
+            </div>
+          </div>
+          <div class="campo">
+            <label for="reg-email">{{ 'Correo electrónico' | t }}</label>
+            <input id="reg-email" type="email" formControlName="email" autocomplete="email"
+                   [attr.aria-invalid]="!!errorDe(registro.controls.email)">
+            @if (errorDe(registro.controls.email); as e) { <span class="campo-error">{{ e }}</span> }
+          </div>
+          <div class="campo">
+            <label for="reg-password">{{ 'Contraseña' | t }}</label>
+            <input id="reg-password" type="password" formControlName="password" autocomplete="new-password"
+                   aria-describedby="reg-password-ayuda" [attr.aria-invalid]="!!errorDe(registro.controls.password)">
+            <span id="reg-password-ayuda" class="ayuda">{{ 'Mínimo 8 caracteres, con letras y números.' | t }}</span>
+            @if (errorDe(registro.controls.password, 'La contraseña debe tener al menos 8 caracteres, con letras y números.'); as e) {
+              <span class="campo-error">{{ e }}</span>
+            }
+          </div>
+          <div class="grid-2">
+            <div class="campo">
+              <label for="reg-telefono">{{ 'Teléfono' | t }} <small>({{ 'opcional' | t }})</small></label>
+              <input id="reg-telefono" type="tel" inputmode="numeric" formControlName="telefono" autocomplete="tel"
+                     [attr.aria-invalid]="!!errorDe(registro.controls.telefono)">
+              @if (errorDe(registro.controls.telefono, 'El teléfono debe tener 9 dígitos.'); as e) {
+                <span class="campo-error">{{ e }}</span>
+              }
+            </div>
+            <div class="campo">
+              <label for="reg-organizacion">{{ 'Organización' | t }} <small>({{ 'opcional' | t }})</small></label>
+              <input id="reg-organizacion" formControlName="organizacion" autocomplete="organization">
+            </div>
+          </div>
+          @if (errorRegistro()) {
+            <app-aviso tipo="error">{{ errorRegistro() }}</app-aviso>
+          }
+          <button appBoton type="submit" [bloque]="true" [cargando]="registrando()" [textoCargando]="'Creando tu cuenta…' | t">
+            {{ 'Registrarme' | t }}
+          </button>
+        </form>
+      }
+    </section>
+  </div>
+</div>
+</div>

@@ -1,0 +1,142 @@
+<div class="contenedor pagina">
+  @if (error()) {
+    <app-aviso tipo="error">{{ error() }}</app-aviso>
+    <p class="seccion-corta"><a routerLink="/predios">{{ 'Volver a mis predios' | t }}</a></p>
+  } @else if (!evaluacion()) {
+    <div class="tarjeta"><app-cargando [lineas]="3" [texto]="'Cargando el resultado…' | t" [visible]="true" /></div>
+    <div class="grid-4 seccion-corta">
+      @for (i of [1, 2, 3, 4]; track i) { <div class="tarjeta"><app-cargando [lineas]="2" /></div> }
+    </div>
+  } @else {
+    @if (evaluacion(); as ev) {
+      <!-- Encabezado con el mejor cultivo -->
+      <section class="destacado" [attr.aria-label]="'Resumen del resultado' | t">
+        <div class="texto">
+          <a class="volver" [routerLink]="['/predios', ev.predioId]"><app-icono nombre="atras" [tamano]="14" /> {{ ev.predio }}</a>
+          <h1>{{ 'Resultado de la evaluación' | t }}</h1>
+          <p class="meta">
+            <app-icono nombre="calendario" [tamano]="16" /> {{ ev.fecha | date: 'dd/MM/yyyy HH:mm' }} ·
+            {{ ev.tipo | etiqueta }} ·
+            <span class="estado" [class.parcial]="ev.estado === 'PARCIAL'">{{ ev.estado | etiqueta }}</span>
+          </p>
+        </div>
+        @if (mejor(); as m) {
+          <div class="mejor">
+            <app-medidor [valor]="m.puntaje" [compatibilidad]="m.compatibilidad" [tamano]="76" />
+            <div>
+              <small>{{ 'Mejor opción para tu predio' | t }}</small>
+              <strong>{{ m.cultivo }}</strong>
+              <span>{{ 'Compatibilidad' | t }} {{ m.compatibilidad | etiqueta | lowercase }}</span>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- Datos usados en esta evaluación -->
+      <section [attr.aria-label]="'Datos usados en la evaluación' | t" class="tarjeta franja datos seccion-corta">
+        <div class="dato">
+          <span class="dato-etiqueta">{{ 'Suelo' | t }}</span>
+          <span class="dato-valor">{{ ev.grupoCum ? ('Grupo' | t) + ' ' + ev.grupoCum : '—' }}</span>
+          <small>{{ ev.grupoCum ? (ev.cumCodigoOriginal || ev.grupoCumNombre) : ('Sin clasificación oficial' | t) }}</small>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">{{ 'Clima' | t }}</span>
+          <span class="dato-valor">{{ ev.temperaturaMedia !== null ? (ev.temperaturaMedia | number: '1.0-1') : '—' }}<span class="unidad">°C</span></span>
+          <small>{{ ev.precipitacionAnualMm !== null ? (ev.precipitacionAnualMm | number: '1.0-0') + ' mm/' + ('año' | t) : '—' }}</small>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">{{ 'Altitud y agua' | t }}</span>
+          <span class="dato-valor">{{ ev.altitudMsnm !== null ? (ev.altitudMsnm | number: '1.0-0') : '—' }}<span class="unidad">{{ 'msnm' | t }}</span></span>
+          <small>{{ ev.fuenteAgua | etiqueta }}</small>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">{{ 'Riesgo hídrico' | t }}</span>
+          <span class="dato-valor">
+            @if (ev.nivelRiesgoHidrico) { <span [class]="'chip nivel-' + ev.nivelRiesgoHidrico">{{ ev.nivelRiesgoHidrico | etiqueta }}</span> } @else { — }
+          </span>
+          <small>{{ ev.distanciaPuntoCriticoKm !== null
+              ? ('Punto crítico a {km} km' | t: { km: (ev.distanciaPuntoCriticoKm | number: '1.1-1') })
+              : ('Sin puntos críticos cercanos' | t) }}</small>
+        </div>
+      </section>
+
+      <!-- T96: resultado parcial -->
+      @if (ev.estado === 'PARCIAL') {
+        <app-aviso tipo="advertencia" [titulo]="'Resultado parcial' | t" class="seccion-corta">
+          {{ 'No pudimos consultar {fuentes}. Para esos datos el ranking usa un valor neutro, así que conviene volver a evaluar más tarde.'
+            | t: { fuentes: fuentesFaltantes() || ('algunas fuentes' | t) } }}
+        </app-aviso>
+      }
+
+
+      <div class="cuerpo-resultado seccion">
+        <div class="principal">
+      <!-- T100: cultivo específico -->
+      @if (ev.resultadoCultivoConsultado; as c) {
+        <section class="bloque" aria-labelledby="titulo-consultado">
+          <h2 id="titulo-consultado">{{ '{cultivo} en tu predio' | t: { cultivo: c.cultivo } }}</h2>
+          <div class="tarjeta">
+            <div class="fila consultado">
+              <app-medidor [valor]="c.puntaje" [compatibilidad]="c.compatibilidad" [tamano]="64" />
+              <span [class]="'chip nivel-' + c.compatibilidad">{{ 'Compatibilidad' | t }} {{ c.compatibilidad | etiqueta | lowercase }}</span>
+              <span class="texto-suave">
+                {{ c.posicion ? ('Puesto {n} de todos los cultivos evaluados' | t: { n: c.posicion }) : '' }}{{ c.compatibilidad === 'BAJA' ? ' · ' + ('no entra en el ranking de compatibles' | t) : '' }}
+              </span>
+            </div>
+            <app-detalle-factores [factores]="c.factores" />
+            <app-tarjeta-rentabilidad [predioId]="ev.predioId" [cultivoId]="c.cultivoId" />
+          </div>
+          @if (alternativas().length) {
+            <h3 class="seccion-corta">{{ 'Mejores alternativas para tu predio' | t }}</h3>
+            <app-ranking-cultivos [ranking]="alternativas()" [predioId]="ev.predioId" />
+          }
+        </section>
+      }
+
+      <!-- T95 / T96: ranking -->
+      <section class="bloque" aria-labelledby="titulo-ranking">
+        <h2 id="titulo-ranking">{{ 'Ranking de cultivos compatibles' | t }}</h2>
+        @if (ev.ranking.length === 0) {
+          <app-aviso tipo="advertencia" [titulo]="'Tu terreno no es apto para los cultivos del catálogo' | t">
+            {{ 'Con el suelo, la altitud, el clima y el riesgo de tu predio, ningún cultivo alcanzó una compatibilidad media o alta. Puede tratarse de tierras de protección o con limitaciones fuertes. Consulta con un técnico de tu agencia agraria antes de invertir.' | t }}
+          </app-aviso>
+        } @else {
+          <p class="texto-suave">
+            {{ 'Hasta 10 cultivos ordenados de mayor a menor puntaje (0 a 100). Pulsa cada uno para ver por qué obtuvo ese puntaje.' | t }}
+          </p>
+          <app-ranking-cultivos [ranking]="ev.ranking" [predioId]="ev.predioId" />
+        }
+      </section>
+        </div>
+        <aside class="lateral">
+      <!-- T98: explicación en lenguaje sencillo -->
+      <section class="tarjeta explicacion" aria-labelledby="titulo-explicacion">
+        <div class="fila encabezado-explicacion">
+          <div class="titulo-con-icono mb-0">
+            <h2 id="titulo-explicacion" class="h3">{{ 'Explicación en lenguaje sencillo' | t }}</h2>
+          </div>
+          <span class="estado-punto" [class.bien]="ev.explicacionPorIa">
+            {{ ev.explicacionPorIa ? ('Redactada con IA' | t) + (ev.modeloIa ? ' (' + ev.modeloIa + ')' : '') : ('Explicación automática' | t) }}
+          </span>
+        </div>
+        @if (idioma === 'en' && !ev.explicacionPorIa) {
+          <p class="texto-suave nota">{{ 'La explicación automática solo está disponible en español.' | t }}</p>
+        }
+        @for (p of parrafos(); track $index) { <p>{{ p }}</p> }
+        @if (ev.explicacionPorIa) {
+          <p class="texto-suave nota">{{ 'La IA solo redacta la explicación; el ranking lo calculan reglas fijas con los datos de tu predio.' | t }}</p>
+        }
+      </section>
+      <!-- T103: calificación -->
+      <app-calificar-evaluacion  [evaluacionId]="ev.id" />
+
+      <!-- T99: aviso de alcance referencial, siempre visible -->
+      <app-aviso tipo="advertencia" class="aviso-final">
+        <strong>{{ 'Aviso:' | t }}</strong> {{ avisoReferencial() }}
+      </app-aviso>
+        </aside>
+      </div>
+
+    }
+  }
+</div>

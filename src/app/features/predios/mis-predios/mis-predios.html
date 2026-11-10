@@ -1,0 +1,68 @@
+<div class="contenedor pagina">
+  <div class="pagina-encabezado">
+    <div>
+      <h1>{{ 'Mis predios' | t }}</h1>
+    </div>
+    @if (lista()?.length) {
+      <a class="btn" routerLink="/predios/nuevo"><app-icono nombre="mas" [tamano]="18" /> {{ 'Registrar predio' | t }}</a>
+    }
+  </div>
+
+  @if (error()) {
+    <app-aviso tipo="error">{{ error() }}</app-aviso>
+  } @else if (lista() === null) {
+    <div class="grid-2">
+      <div class="tarjeta"><app-cargando [lineas]="4" /></div>
+      <div class="tarjeta"><app-cargando [lineas]="4" /></div>
+    </div>
+  } @else if (lista()!.length === 0) {
+    <app-estado-vacio [titulo]="'Aún no registras ningún predio' | t"
+                      [mensaje]="'Registra tu terreno para conocer su suelo, clima y riesgo, y saber qué cultivos le van mejor.' | t">
+      <a class="btn" routerLink="/predios/nuevo"><app-icono nombre="mas" [tamano]="18" /> {{ 'Registrar mi primer predio' | t }}</a>
+    </app-estado-vacio>
+  } @else {
+    <section class="tarjeta franja tres" [attr.aria-label]="'Resumen' | t">
+      <div><div class="dato"><span class="dato-etiqueta">{{ 'Predios' | t }}</span><span class="dato-valor" [appContador]="lista()!.length"></span></div></div>
+      <div><div class="dato"><span class="dato-etiqueta">{{ 'Área total' | t }}</span><span class="dato-valor" [appContador]="areaTotal()" [decimales]="2" sufijo=" ha"></span></div></div>
+      <div><div class="dato"><span class="dato-etiqueta">{{ 'Evaluados' | t }}</span><span class="dato-valor">{{ evaluados() }} / {{ lista()!.length }}</span></div></div>
+    </section>
+
+    <div class="grid-2 seccion-corta lista-predios">
+      @for (p of lista(); track p.id) {
+        <article class="tarjeta tarjeta-interactiva predio">
+          <div class="cabeza">
+            <div>
+              <h3>{{ p.nombre }}</h3>
+              <p class="texto-suave ubicacion"><app-icono nombre="ubicacion" [tamano]="14" /> {{ p.departamento }} / {{ p.provincia }} / {{ p.distrito }}</p>
+            </div>
+          </div>
+          <dl>
+            <dt>{{ 'Área' | t }}</dt><dd>{{ p.areaHa | number: '1.0-2' }} ha</dd>
+            <dt>{{ 'Agua' | t }}</dt><dd>{{ p.fuenteAgua | etiqueta }}</dd>
+            <dt>{{ 'Última evaluación' | t }}</dt>
+            <dd>
+              @if (p.ultimaEvaluacion) { {{ p.ultimaEvaluacion | date: 'dd/MM/yyyy' }} }
+              @else { <span class="estado-punto atencion">{{ 'Aún sin evaluar' | t }}</span> }
+            </dd>
+          </dl>
+          <div class="fila acciones">
+            <a class="btn btn-pequeno principal" [routerLink]="['/predios', p.id]">{{ 'Ver y evaluar' | t }}</a>
+            <a class="btn btn-secundario btn-pequeno" [routerLink]="['/predios', p.id, 'editar']">
+              <app-icono nombre="lapiz" [tamano]="16" /> {{ 'Editar' | t }}</a>
+            <button class="btn-texto eliminar" type="button" (click)="eliminar(p)">
+              <app-icono nombre="basura" [tamano]="16" /> {{ 'Eliminar' | t }}</button>
+          </div>
+        </article>
+      }
+    </div>
+
+    <section class="seccion" aria-labelledby="titulo-mapa-predios">
+      <h2 id="titulo-mapa-predios">{{ 'Ubicación de mis predios' | t }}</h2>
+      @defer (on viewport) {
+        <app-mapa [marcadores]="marcadores()" [ajustar]="true" [etiqueta]="'Mapa con la ubicación de mis predios' | t" />
+      } @placeholder {
+        <div class="esqueleto" style="height: 340px; border-radius: var(--radio-tarjeta)"></div>
+      }
+    </section>
+  }
+</div>

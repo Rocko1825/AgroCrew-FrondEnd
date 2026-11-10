@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>AgroCrew</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AgroCrew: descubre qué cultivos son compatibles con tu terreno.">
+  <meta name="theme-color" content="#2F5D3A">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <script>
+    // Aplica el tema y el idioma guardados antes de dibujar la página (evita un parpadeo de colores).
+    (function () {
+      var tema = null, idioma = null;
+      try { tema = localStorage.getItem('agrocrew.tema'); idioma = localStorage.getItem('agrocrew.idioma'); } catch (e) {}
+      if (tema !== 'claro' && tema !== 'oscuro') {
+        tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      }
+      document.documentElement.setAttribute('data-theme', tema === 'oscuro' ? 'dark' : 'light');
+      if (idioma === 'en') { document.documentElement.lang = 'en'; }
+    })();
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
