@@ -1,111 +1,122 @@
-# AgroCrew · Frontend (Angular)
+# AgroCrew · Frontend
 
-Aplicación web de **AgroCrew** para productores, asesores y administradores. Consume la API REST del backend
-(Spring Boot) y aplica la guía de estilo del informe (sección 3.1): un solo color de marca `#2F5D3A`,
-fuentes del sistema, tarjetas reutilizables y un único punto de quiebre a 768 px.
+**AgroCrew** es una plataforma web que evalúa la aptitud agrícola de terrenos cruzando datos de MIDAGRI, ANA y Open-Meteo con apoyo de inteligencia artificial. Este repositorio contiene la **aplicación web en Angular** que usan productores, asesores y administradores para registrar predios, evaluar cultivos, revisar alertas y consultar reportes.
+
+> El backend (API REST) vive en un repositorio separado y no forma parte de este proyecto.
+
+## Contexto académico
 
 | | |
 |---|---|
-| **Curso** | Arquitectura de Aplicaciones Web (SI705) · UPC · 2026-20 |
-| **Sprint** | Sprint 3 (TF) · TS19 |
-| **Backend** | `Agrocrew-backend` (Swagger en `http://localhost:8080/swagger-ui.html`) |
+| **Curso** | 1ASI0705 · Arquitectura de Aplicaciones Web |
+| **Universidad** | Universidad Peruana de Ciencias Aplicadas (UPC) |
+| **Ciclo** | 202620 |
+| **Docente** | Elio Jefferrson Navarrete Vilca |
 
-## Requisitos
+## Tecnologías
 
-- Node.js 22 o superior (probado con Node 24) y npm.
-- Angular CLI 22: `npm install -g @angular/cli`
-- El backend corriendo en `http://localhost:8080` (desde IntelliJ: `AgrocrewApplication`).
+Versiones declaradas en `package.json`:
 
-## Ejecutar en local
-
-```bash
-npm install
-ng serve
-```
-
-Abre **http://localhost:4200**. El backend ya permite este origen en CORS (`CORS_ORIGINS`).
-
-Usuarios de prueba (si se cargaron los datos de la guía de pruebas):
-
-| Rol | Correo | Contraseña |
+| Paquete | Versión | Uso |
 |---|---|---|
-| Administrador | `admin@agrocrew.pe` | `Admin12345` |
-| Productor | `jose.rivera@test.com` | `clave1234` |
+| `@angular/core`, `common`, `compiler`, `forms`, `platform-browser`, `router` | ^22.1.0 | Framework (componentes standalone, signals, router) |
+| `@angular/cli`, `@angular/build` | ^22.1.5 | CLI, servidor de desarrollo y build |
+| `typescript` | ~6.0.2 | Lenguaje |
+| `rxjs` | ~7.8.0 | Programación reactiva / HTTP |
+| `leaflet` · `leaflet.heat` | ^1.9.4 · ^0.2.0 | Mapas (OpenStreetMap) y mapa de calor |
+| `chart.js` | ^4.6.1 | Gráficos |
+| `motion` | ^14.10.1 | Animaciones |
+| `ngx-sonner` | ^3.1.0 | Notificaciones (toasts) |
+| `vitest` · `jsdom` | ^4.0.8 · ^28.0.0 | Pruebas unitarias |
+| `prettier` | ^3.8.1 | Formato de código (`.prettierrc`) |
 
-## Otros comandos
+Los estilos usan SCSS (`src/styles.scss` y `src/styles/_variables.scss`).
 
-| Comando | Para qué sirve |
-|---|---|
-| `ng build` | Compila para producción en `dist/agrocrew-frontend` (usa `environment.prod.ts`). |
-| `ng test --watch=false` | Ejecuta las pruebas unitarias (Vitest). |
+> Angular Material está planificado, pero todavía no figura en `package.json`. TODO: actualizar esta tabla al instalarlo (`ng add @angular/material`).
 
-## Variables de entorno
-
-La URL de la API está en `src/environments/`:
-
-| Archivo | Se usa en | `apiUrl` |
-|---|---|---|
-| `environment.ts` | `ng serve` (desarrollo) | `http://localhost:8080/api/v1` |
-| `environment.prod.ts` | `ng build` (producción) | URL de AWS. Cambiarla por la URL **https** de CloudFront (T67) antes de publicar. |
-
-Al publicar el front (T64) hay que agregar su dominio en la variable `CORS_ORIGINS` de Elastic Beanstalk.
-Si el front se publica con `https://`, la API también debe tener HTTPS; si no, el navegador bloquea las llamadas.
-
-## Estructura de carpetas
+## Estructura del proyecto
 
 ```
 src/
-├── environments/            URL de la API por entorno
-├── styles.scss              Estilos globales: colores (variables CSS), tipografía, botones, tarjetas, formularios
-├── styles/_variables.scss   Variables SCSS de la guía de estilo y el mixin del quiebre a 768 px
+├── main.ts                 Punto de entrada de la aplicación
+├── index.html              Página HTML base
+├── styles.scss             Estilos globales (variables CSS, tipografía, componentes base, modo oscuro)
+├── styles/                 Variables y mixins SCSS de la guía de estilo
+├── environments/           Configuración por entorno (URL base de la API)
 └── app/
-    ├── core/                Lo que se usa en toda la app (una sola instancia)
-    │   ├── models/          Tipos de la API (api.models.ts) y textos en lenguaje sencillo (etiquetas.ts)
-    │   ├── services/        Un servicio por módulo de la API + sesión, notificaciones y confirmación
-    │   ├── interceptors/    Token JWT en cada llamada, cierre de sesión ante 401 y mensajes de error claros
-    │   └── guards/          Acceso por sesión y por rol (PRODUCTOR, ASESOR, ADMIN)
-    ├── shared/              Componentes reutilizables: aviso, tarjeta, botón, diálogo, mapa (Leaflet),
-    │                        gráfico de barras, paginador; pipe de etiquetas; utilidades de formularios y CSV
-    ├── layout/              Cabecera con menú ☰ y contador de alertas, pie de página, notificaciones
-    └── features/            Pantallas por módulo
-        ├── auth/            Acceso (login y registro), recuperar y restablecer contraseña
-        ├── perfil/          Mi perfil
-        ├── predios/         Mis predios, registro/edición (ubigeo, mapa, código catastral) y detalle
-        ├── evaluaciones/    Evaluar, resultado, ranking, factores, rentabilidad, calificación e historial
-        ├── alertas/         Mis alertas
-        ├── mapa-riesgo/     Puntos críticos de la ANA en el mapa
-        ├── dashboard/       Dashboard por zona (asesor y administrador) con mapa de calor y CSV
-        └── admin/           Usuarios, cultivos y datos económicos (administrador)
+    ├── app.ts / app.config.ts / app.routes.ts   Componente raíz, providers y rutas
+    ├── core/               Servicios únicos de la app
+    │   ├── guards/         Protección de rutas por sesión y por rol
+    │   ├── i18n/           Traducciones español / inglés
+    │   ├── interceptors/   Envío del token JWT y manejo centralizado de errores HTTP
+    │   ├── models/         Tipos de la API y etiquetas en lenguaje sencillo
+    │   └── services/       Servicios por módulo de la API, sesión, tema y notificaciones
+    ├── shared/             Elementos reutilizables
+    │   ├── components/     Tarjeta, botón, aviso, diálogo, mapa, gráfico, medidor, paginador, etc.
+    │   ├── pipes/          Pipes de traducción (`t`) y de etiquetas
+    │   └── utils/          Utilidades de formularios y exportación CSV
+    ├── layout/             Cabecera y pie de página
+    └── features/           Pantallas por módulo
+        ├── auth/           Acceso, recuperación y restablecimiento de contraseña
+        ├── perfil/         Perfil del usuario
+        ├── predios/        Listado, registro/edición y detalle de predios
+        ├── evaluaciones/   Evaluación, resultado, ranking, factores, rentabilidad, calificación e historial
+        ├── alertas/        Alertas del productor
+        ├── mapa-riesgo/    Mapa de puntos críticos
+        ├── dashboard/      Indicadores por zona para asesores y administradores
+        └── admin/          Gestión de usuarios, cultivos y datos económicos
+public/                     Recursos estáticos (favicon, logo, fondos)
 ```
 
-## Pantallas y rutas
+## Requisitos previos
 
-| Ruta | Rol | Historias |
+| Herramienta | Versión |
+|---|---|
+| Node.js | TODO: `package.json` no declara `engines`; confirmar la versión mínima compatible con Angular 22 |
+| npm | 12.0.2 (campo `packageManager` de `package.json`) |
+| Angular CLI | 22 (`@angular/cli` ^22.1.5). Es opcional instalarlo globalmente (`npm install -g @angular/cli`); los scripts de npm usan la versión local. |
+
+## Instalación y ejecución
+
+```bash
+git clone https://github.com/Rocko1825/AgroCrew-FrondEnd.git
+cd AgroCrew-FrondEnd
+npm install
+npm start        # equivale a: ng serve
+```
+
+La aplicación queda disponible en **http://localhost:4200** (puerto por defecto de `ng serve`). El servidor de desarrollo usa la configuración `development`.
+
+## Build y tests
+
+| Comando | Descripción |
+|---|---|
+| `npm run build` | `ng build` con la configuración `production`. Genera `dist/agrocrew-frontend` y reemplaza `environment.ts` por `environment.prod.ts`. |
+| `npm run watch` | `ng build --watch --configuration development`: recompila al guardar cambios. |
+| `npm test` | `ng test`: ejecuta las pruebas unitarias con Vitest. Añade `-- --watch=false` para una sola ejecución. |
+
+## Conexión con el backend
+
+El backend de AgroCrew se encuentra en otro repositorio. TODO: agregar el enlace al repositorio del backend.
+
+La URL base de la API se configura en la propiedad `apiUrl` de los archivos de `src/environments/`:
+
+| Archivo | Se usa en | `apiUrl` |
 |---|---|---|
-| `/acceso` | Público | US01, US02 |
-| `/recuperar`, `/restablecer?token=` | Público | US05 |
-| `/perfil` | Todos | US04 |
-| `/predios`, `/predios/nuevo`, `/predios/:id/editar` | Productor | US06–US10, US07 |
-| `/predios/:id` | Productor | US11–US14, US18, US23, US24 |
-| `/evaluaciones/:id` | Productor | US18–US23, US25 |
-| `/alertas` | Productor | US15, US16 |
-| `/mapa` | Productor | US17 |
-| `/dashboard` | Asesor, Admin | US26–US29, US34 |
-| `/admin/usuarios`, `/admin/cultivos`, `/admin/datos-economicos` | Admin | US30–US33 |
+| `environment.ts` | `npm start` / `ng serve` (desarrollo) | `http://localhost:8080/api/v1` |
+| `environment.prod.ts` | `npm run build` (producción) | URL del backend desplegado en AWS |
 
-## Decisiones técnicas
+El backend debe permitir por CORS el origen desde el que se sirve el frontend (en local, `http://localhost:4200`). TODO: reemplazar la URL de producción por la URL HTTPS definitiva de la API.
 
-- **Angular 22 con componentes standalone y signals**, sin zone.js. Cada pantalla se carga solo al visitarla (carga diferida), lo que ayuda en conexiones rurales.
-- **Sin librerías visuales pesadas**: los estilos son propios y los gráficos se hacen con HTML/CSS. El único paquete visual es **Leaflet** con OpenStreetMap (y `leaflet.heat` para el mapa de calor).
-- **Accesibilidad**: contraste AA, unidades `rem`, títulos semánticos, `aria-expanded` en menús y desplegables, mensajes de error con `role="alert"` y enlace «Saltar al contenido».
-- **Errores**: el interceptor convierte cualquier error en un mensaje claro (400, 403, 404, 409, 503 y sin conexión) y, ante un 401, cierra la sesión y vuelve al inicio de sesión.
-- **Modo oscuro**: botón ☀/🌙 en la cabecera. Los colores son variables CSS en `styles.scss` (`:root` y `:root[data-theme='dark']`); la elección se guarda en el navegador y, si no hay ninguna, se sigue la del sistema.
-- **Idioma español / inglés**: botón EN/ES en la cabecera. Los textos se escriben en español en las plantillas con el pipe `t` (`{{ 'Mis predios' | t }}`) y su traducción está en `core/i18n/textos.en.ts`. Los mensajes fijos del backend (errores, validaciones, grupos de suelo, factores) se traducen con el pipe `tApi` (`core/i18n/textos-api.en.ts`). La explicación automática del backend solo existe en español; con la IA (Gemini) configurada llega en inglés gracias al header `Accept-Language`.
-- **Notificaciones con `ngx-sonner`**: port para Angular de Sonner (Emil Kowalski). Se apilan, se expanden al pasar el cursor y se descartan deslizándolas; usan los colores de la guía y siguen el modo claro u oscuro. Las pantallas las llaman mediante `NotificacionService`.
-- **Animaciones sutiles**: entrada de páginas, tarjetas que se elevan, barras y medidores que se dibujan, esqueletos de carga y transiciones entre pantallas. Se desactivan solas si el sistema pide «reducir movimiento» (`prefers-reduced-motion`).
+## Despliegue
 
-### Agregar un texto traducible
+TODO: URL pública del frontend desplegado.
 
-1. En la plantilla: `{{ 'Texto en español' | t }}` (o en TypeScript: `t('Texto en español')`).
-2. En `src/app/core/i18n/textos.en.ts`: `'Texto en español': 'English text',`.
-3. Si lleva datos: `{{ 'Hola, {nombre}' | t: { nombre: usuario.nombres } }}` y en el diccionario `'Hola, {nombre}': 'Hi, {nombre}'`.
+## Integrantes
+
+1. Axel Yerico De La Cruz Huamán
+2. Adrian Eduardo Estrada Ochoa
+3. Saul Lujan Chu
+4. José Rivera Zelaya
+5. Mauricio Leonardo Valverde Barrera
+6. Ronaldo Torres Lizana
